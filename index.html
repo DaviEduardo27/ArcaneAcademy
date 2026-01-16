@@ -52,15 +52,14 @@
         #start-btn-intro:hover { background: rgba(0, 50, 100, 0.9); border-color: var(--magic-blue); box-shadow: 0 0 60px var(--magic-blue); color: #fff; transform: translate(-50%, -50%) scale(1.05); }
         #skip-text { position: absolute; bottom: 30px; right: 40px; z-index: 20002; font-family: 'Cinzel'; color: rgba(255,255,255,0.4); font-size: 0.8rem; letter-spacing: 3px; cursor: pointer; display: none; text-transform: uppercase; }
 
-        /* --- MENU (REFORGED) --- */
+        /* --- MENU (CORRIGIDO: Background Contain) --- */
         #screen-menu { 
             background: url('Imagens/CapaGame.jpg') no-repeat center center; 
-            background-size: cover; 
+            background-size: contain; /* GARANTE QUE A IMAGEM INTEIRA APAREÇA SEM CORTES */
+            background-color: #000; /* Preenche o resto com preto se a tela for diferente da imagem */
             width: 100%; height: 100%;
-            /* Removemos o backdrop-blur global para mostrar a arte limpa */
         }
         
-        /* Vignette Mágica nas bordas para dar profundidade e esconder cortes */
         .menu-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, transparent 40%, rgba(5, 10, 30, 0.6) 70%, #000 100%);
@@ -69,10 +68,10 @@
 
         .menu-card { 
             width: 100%; height: 100%; 
-            background: transparent; /* Removemos o fundo do card interno */
-            border: none; box-shadow: none; /* Removemos bordas e sombras quadradas */
+            background: transparent; 
+            border: none; box-shadow: none; 
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center; 
-            overflow: hidden; z-index: 2; /* Fica acima do overlay */
+            overflow: hidden; z-index: 2;
         }
 
         .title-glow-fx { position: absolute; top: 0; width: 100%; height: 40%; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); pointer-events: none; z-index: 5; }
@@ -81,22 +80,22 @@
         /* CARROSSEL CLEAN & 3D */
         .menu-options-container { 
             width: 100%; 
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%); /* Fundo suave apenas embaixo */
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
             padding: 40px 0 80px 0;
             display: flex; justify-content: center; align-items: flex-end; 
-            gap: 40px; /* Mais espaço entre cartas */
+            gap: 40px;
             perspective: 1500px; 
             min-height: 400px; 
             z-index: 2000; 
             overflow-x: auto; 
-            border: none; box-shadow: none; /* Removemos linhas do container */
+            border: none; box-shadow: none;
         }
         
-        .menu-options-container::-webkit-scrollbar { display: none; } /* Esconde scrollbar */
+        .menu-options-container::-webkit-scrollbar { display: none; }
 
         .magic-menu-card { 
             width: 180px; height: 260px; flex-shrink: 0; 
-            background: rgba(10, 12, 16, 0.7); /* Mais transparente */
+            background: rgba(10, 12, 16, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.1); 
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
             border-radius: 8px; 
@@ -110,7 +109,6 @@
         .card-icon { font-size: 4rem; color: #aaa; transition: 0.4s; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
         .card-label { font-family: 'Cinzel'; font-size: 1rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 3px; transition: 0.4s; margin-top: 10px; }
         
-        /* HOVER: Brilho Azul Intenso e Efeito Flutuante */
         .magic-menu-card:hover { 
             transform: translateY(-25px) scale(1.05); 
             background: rgba(10, 20, 40, 0.9); 
@@ -121,7 +119,6 @@
         .magic-menu-card:hover .card-icon { color: #fff; filter: drop-shadow(0 0 20px var(--magic-blue)); transform: scale(1.1) translateZ(20px); }
         .magic-menu-card:hover .card-label { color: #fff; text-shadow: 0 0 15px var(--magic-blue); transform: translateZ(20px); }
         
-        /* CLICK: Pulso e Encolhimento */
         .magic-menu-card:active { transform: translateY(-20px) scale(0.95); filter: brightness(1.2); transition: 0.1s; }
         
         .magic-menu-card.disabled { opacity: 0.3; filter: grayscale(1); pointer-events: none; display:none; }
