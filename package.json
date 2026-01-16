@@ -1,0 +1,16 @@
+{
+  "name": "arcane-academy",
+  "version": "1.0.0",
+  "description": "Um jogo de memória com elementos de RPG",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-packager . ArcaneAcademy --platform=win32 --arch=x64 --overwrite"
+  },
+  "author": "Davi Eduardo",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-packager": "^17.1.2"
+  }
+}
