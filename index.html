@@ -49,6 +49,18 @@
         #crack-svg { width: 80%; height: 80%; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
         .crack-path { fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
         
+        /* BLACK HOLE FX */
+        #black-hole {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 150px; height: 150px; border-radius: 50%;
+            background: #000;
+            box-shadow: 0 0 30px #4b0082, 0 0 60px #800080, inset 0 0 40px rgba(255,255,255,0.1);
+            z-index: 9000; pointer-events: none; opacity: 0;
+        }
+        #black-hole::before { content: ''; position: absolute; top: -20%; left: -20%; width: 140%; height: 140%; border-radius: 50%; border: 2px solid rgba(108, 52, 131, 0.5); border-top-color: transparent; border-bottom-color: transparent; animation: bhSpin 2s linear infinite; }
+        #black-hole::after { content: ''; position: absolute; top: -40%; left: -40%; width: 180%; height: 180%; border-radius: 50%; border: 2px dashed rgba(75, 0, 130, 0.3); animation: bhSpin 4s linear infinite reverse; }
+        @keyframes bhSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         /* Chromatic Aberration Class */
         .chromatic-active { animation: chromaticShake 0.2s infinite; filter: url(#chromatic-aberration); }
         @keyframes chromaticShake { 0% { transform: translate(1px, 0); } 50% { transform: translate(-1px, 0); } 100% { transform: translate(1px, 0); } }
@@ -261,6 +273,7 @@
     <div id="time-warning-layer"></div>
     <div id="fade-layer"></div>
     <canvas id="portal-canvas"></canvas>
+    <div id="black-hole"></div>
     
     <div id="crack-fx">
         <svg id="crack-svg" viewBox="0 0 500 500"><path class="crack-path" d="M250 250 L300 150 L320 100 M250 250 L150 200 L100 180 M250 250 L200 350 L180 400 M250 250 L350 300 L400 320 M250 250 L280 220 L350 200 M250 250 L220 280 L150 300"></path></svg>
@@ -306,7 +319,7 @@
                 <div class="magic-menu-card disabled" id="btn-continue" onclick="playS('click'); continuarJogo()"><div class="card-icon">📜</div><div class="card-label">Continuar</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label">Jogar</div></div>
                 <div class="magic-menu-card" id="btn-ngplus" style="display:none; border-color:var(--danger-red);" onclick="playS('click'); iniciarNewGamePlus()"><div class="card-icon" style="color:var(--danger-red);">🔥</div><div class="card-label" style="color:var(--danger-red);">New Game+</div></div>
-                <div class="magic-menu-card" id="btn-infinite" style="display:none; border-color:var(--chaos-purple);" onclick="playS('click'); iniciarModoInfinito()"><div class="card-icon" style="color:var(--chaos-purple);">♾️</div><div class="card-label" style="color:var(--chaos-purple);">Infinito</div></div>
+                <div class="magic-menu-card" id="btn-infinite" style="display:none; border-color:var(--chaos-purple);" onclick="playS('click'); openInfiniteMenu()"><div class="card-icon" style="color:var(--chaos-purple);">♾️</div><div class="card-label" style="color:var(--chaos-purple);">Infinito</div></div>
                 <div class="magic-menu-card" id="btn-grimoire-menu" style="display:none; border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);">Grimório</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); abrirPerfilMenu()"><div class="card-icon">🧙‍♂️</div><div class="card-label">Perfil</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); openConfigMenu('menu')"><div class="card-icon">⚙️</div><div class="card-label">Opções</div></div>
@@ -368,9 +381,18 @@
         <div class="grimoire-actions"><div class="btn-main" style="width:200px;" onclick="playS('click'); sairParaMenu()">Menu Principal</div></div>
     </div>
 
-    <div id="screen-ending-credits">
+    <div id="screen-ending-credits" onclick="sairParaMenu()" style="cursor:pointer;">
         <div class="credits-content" id="credits-scroll-area"></div>
-        <div class="btn-main" style="position:fixed; bottom:30px; right:30px; width:auto; padding:10px 30px; z-index:25001;" onclick="sairParaMenu()">Pular</div>
+    </div>
+
+    <div id="modal-infinite" class="modal-overlay">
+        <div class="panel-glass" style="width: 500px; position: relative;">
+            <div class="btn-close-modal" onclick="document.getElementById('modal-infinite').style.display='none'">✖</div>
+            <h2 style="color:var(--chaos-purple); text-shadow: 0 0 10px var(--chaos-purple);">MODO INFINITO</h2>
+            <div style="margin: 20px 0; font-family: 'MedievalSharp'; color: #ccc;">Sobreviva o máximo que puder.<br>A dificuldade aumenta a cada passo.</div>
+            <div class="ranking-box"><h3 style="color:var(--accent-gold); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">HALL DAS LENDAS</h3><div id="infinite-ranking-list" style="max-height: 200px; overflow-y: auto; text-align: left; padding: 5px;"></div></div>
+            <div class="btn-main" style="border-color:var(--chaos-purple); color:var(--chaos-purple);" onclick="playS('click'); startInfiniteRun()">INICIAR RUN</div>
+        </div>
     </div>
 
     <div id="exit-screen"><div style="font-family:'Cinzel'; font-size:2rem; margin-bottom:20px; color:var(--accent-gold); text-shadow:0 0 10px var(--accent-gold);">Até logo, Mago.</div></div>
@@ -516,6 +538,8 @@
         if(!globalData.achievements) globalData.achievements = [];
         if(typeof globalData.grimoireUnlocked === 'undefined') globalData.grimoireUnlocked = false;
         if(typeof globalData.ngPlusUnlocked === 'undefined') globalData.ngPlusUnlocked = false;
+        if(typeof globalData.infiniteUnlocked === 'undefined') globalData.infiniteUnlocked = false;
+        if(!globalData.infiniteHighScores) globalData.infiniteHighScores = [];
         let prof = JSON.parse(localStorage.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0 };
         let cfg = JSON.parse(localStorage.getItem('aa_cfg')) || { m: CONFIG_DEFAULTS.MUSIC_VOL, s: CONFIG_DEFAULTS.SFX_VOL, part: CONFIG_DEFAULTS.PARTICLES };
         let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false, ngPlus: false };
@@ -527,10 +551,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
             audioManager.init();
-            initParticles(); 
+            initWeatherSystem(); 
             updateProfUI(); 
             applySettings(); 
             checkSave();
+            checkAchievements('startup');
             initAudioVisualizer();
 
             const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
@@ -562,7 +587,10 @@
             let bIdx = (f-1)%bosses.length; if(game.infiniteMode) bIdx = Math.floor(Math.random()*bosses.length); currentBossIndex = bIdx; const b = bosses[bIdx];
             document.getElementById('boss-img-tag').src = `Imagens/Monstros/${b.file}`; document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.textShadow = "0 0 20px " + b.color; document.getElementById('dynamic-bg-layer').className = b.env;
             
-            let n = game.ngPlus ? 24 : 16; // NG+ tem 24 cartas, Normal tem 16
+            let n = 16;
+            if (game.ngPlus) n = 24;
+            if (game.infiniteMode) { n = 16; if(f > 5) n = 20; if(f > 10) n = 24; } // Dificuldade Progressiva no Infinito
+            
             const p=n/2; hpMax=p; hp=p; updateHP(); total=p; pares=0; cartas=[]; travado=false; combo=0;
             clearInterval(bleedInterval); // Limpa sangramento anterior
             
@@ -636,6 +664,7 @@
         function finishStage() {
             const xpGained = 100 + (game.score/10); prof.xp += xpGained;
             let msg = `Vitória! +${Math.floor(xpGained)} XP.`;
+            if(game.score > prof.maxScore) prof.maxScore = game.score;
             
             // 2° ZERAMENTO DO JOGO (Fase 10 - Gaiaos)
             if(game.fase === 10 && !game.infiniteMode) {
@@ -665,6 +694,7 @@
             if(!globalData.grimoireUnlocked) {
                 globalData.grimoireUnlocked = true;
                 globalData.ngPlusUnlocked = true; // Desbloqueia NG+
+                globalData.infiniteUnlocked = true; // Desbloqueia Infinito
                 localStorage.setItem('aa_global', JSON.stringify(globalData));
                 notificar("GRIMÓRIO DESBLOQUEADO!");
             } else {
@@ -697,6 +727,46 @@
             document.getElementById('screen-ending-credits').style.display = 'flex';
         }
 
+        function openInfiniteMenu() {
+            const list = document.getElementById('infinite-ranking-list'); list.innerHTML = '';
+            const scores = globalData.infiniteHighScores.sort((a,b) => b.score - a.score).slice(0, 10);
+            if(scores.length === 0) list.innerHTML = '<div style="text-align:center; color:#666; font-style:italic;">Nenhum registro encontrado.</div>';
+            else scores.forEach((s, i) => {
+                const color = i === 0 ? '#ffd700' : (i === 1 ? '#c0c0c0' : (i === 2 ? '#cd7f32' : '#aaa'));
+                list.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:1.1rem;"><span style="color:${color}; font-weight:bold;">#${i+1} ${s.name}</span><span style="font-family:'Cinzel';">${s.score} pts (Fase ${s.fase})</span></div>`;
+            });
+            document.getElementById('modal-infinite').style.display = 'flex';
+        }
+
+        function startInfiniteRun() {
+            document.getElementById('modal-infinite').style.display = 'none'; localStorage.removeItem('aa_save');
+            game = { fase: 1, score: 0, infiniteMode: true, chaosActive: false, ngPlus: false };
+            prof.totalGames++; localStorage.setItem('aa_prof', JSON.stringify(prof));
+            audioManager.playGame(); transitionFase(1);
+        }
+
+        function gameOverInfinite() {
+            playS('chaos'); // Som do Vazio
+            const bh = document.getElementById('black-hole');
+            const allCards = Array.from(document.querySelectorAll('.card-wrapper'));
+            
+            gsap.to(bh, { opacity: 1, scale: 2.5, duration: 1.5, ease: "power2.out" });
+            allCards.forEach(w => {
+                const rect = w.getBoundingClientRect();
+                const dx = (window.innerWidth/2) - (rect.left + rect.width/2);
+                const dy = (window.innerHeight/2) - (rect.top + rect.height/2);
+                gsap.to(w, { x: dx, y: dy, scale: 0, rotation: 1080, opacity: 0, duration: 1.2, ease: "power4.in", delay: Math.random()*0.3 });
+            });
+
+            setTimeout(() => {
+                const entry = { name: prof.nome, score: game.score, fase: game.fase, date: new Date().toLocaleDateString() };
+                globalData.infiniteHighScores.push(entry); localStorage.setItem('aa_global', JSON.stringify(globalData));
+                notificar("O Vazio consumiu tudo...");
+                gsap.to(bh, { scale: 0, opacity: 0, duration: 0.5, delay: 0.5 });
+                setTimeout(() => { sairParaMenu(); setTimeout(() => openInfiniteMenu(), 500); }, 2000);
+            }, 2000);
+        }
+
         // --- 6. MECÂNICAS E UTILITÁRIOS ---
         function startTimer(t) { 
             tempo=t; UI.hud.tempo.innerText=tempo; 
@@ -722,24 +792,30 @@
         // Intervalo de Caos ajustado para 45s - 90s para não frustrar o jogador
         function scheduleNextChaos() { clearTimeout(chaosTimer); const time = Math.random()*(90000-45000)+45000; chaosTimer = setTimeout(() => { triggerChaosShuffle(); scheduleNextChaos(); }, time); }
         function triggerChaosShuffle() {
-            const validCards = Array.from(document.querySelectorAll('.card:not(.flipped):not(.matched)')); 
-            if(validCards.length<2) return;
-            
+            const validCards = Array.from(document.querySelectorAll('.card:not(.flipped):not(.matched)')); if(validCards.length<2) return;
             const wrappers = validCards.map(c => c.parentElement);
-            game.chaosActive = true; playS('chaos'); notificar("Caos! Embaralhando...");
+            game.chaosActive = true; playS('chaos'); notificar("O Vazio embaralha o destino...");
             validCards.forEach(c => c.classList.add('chaos-glow'));
             
-            gsap.to(wrappers, { 
-                duration: 1, scale: 0.5, rotation: 360, 
-                x: (i) => Math.cos(i) * 100, y: (i) => Math.sin(i) * 100, // Espiral simples
-                opacity: 0.8, ease: "power2.inOut", 
-                onComplete: () => {
-                    const icons = validCards.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
-                    validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerText = icons[i]; });
-                    
-                    gsap.to(wrappers, { duration: 0.5, scale: 1, rotation: 0, x: 0, y: 0, opacity: 1, ease: "back.out(1.7)", clearProps:"all", onComplete: () => { validCards.forEach(c => c.classList.remove('chaos-glow')); game.chaosActive = false; } });
-                }
+            const bh = document.getElementById('black-hole');
+            gsap.to(bh, { opacity: 1, scale: 1.5, duration: 0.5, ease: "back.out" });
+
+            wrappers.forEach(w => {
+                const rect = w.getBoundingClientRect();
+                const dx = (window.innerWidth/2) - (rect.left + rect.width/2);
+                const dy = (window.innerHeight/2) - (rect.top + rect.height/2);
+                gsap.to(w, { x: dx, y: dy, scale: 0, rotation: 720, opacity: 0, duration: 0.8, ease: "power2.in", delay: Math.random()*0.1 });
             });
+
+            setTimeout(() => {
+                const icons = validCards.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
+                validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerText = icons[i]; });
+                
+                gsap.to(wrappers, { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)", stagger: 0.02, clearProps:"all", onComplete: () => { 
+                    validCards.forEach(c => c.classList.remove('chaos-glow')); game.chaosActive = false; 
+                    gsap.to(bh, { opacity: 0, scale: 0, duration: 0.5 });
+                }});
+            }, 1000);
         }
 
         function quiz(msg) { 
@@ -771,6 +847,11 @@
             finishStage();
         }
         function quizFail() { 
+            if(game.infiniteMode) {
+                document.getElementById('modal-quiz').style.display='none';
+                gameOverInfinite();
+                return;
+            }
             prof.quizStreak = 0; localStorage.setItem('aa_prof', JSON.stringify(prof));
             playS('thunder'); 
             document.getElementById('modal-quiz').style.display='none'; 
@@ -799,6 +880,7 @@
             // Verifica Grimório
             const g=document.getElementById('btn-grimoire-menu'); if(globalData.grimoireUnlocked) g.style.display='flex'; else g.style.display='none';
             const ng=document.getElementById('btn-ngplus'); if(globalData.ngPlusUnlocked) ng.style.display='flex'; else ng.style.display='none';
+            const inf=document.getElementById('btn-infinite'); if(globalData.infiniteUnlocked) inf.style.display='flex'; else inf.style.display='none';
         }
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
@@ -824,18 +906,6 @@
         function deletarSave() { if(confirm("Apagar tudo?")) { localStorage.removeItem('aa_prof'); localStorage.removeItem('aa_save'); location.reload(); } }
 
         // --- 7. VFX E ANIMAÇÕES ---
-        class Particle {
-            constructor(w, h){
-                this.x=Math.random()*w; this.y=Math.random()*h;
-                this.s=Math.random()*2; this.sy=Math.random(); this.o=Math.random()*0.5;
-            }
-            update(h){ this.y-=this.sy; if(this.y<0)this.y=h; }
-            draw(ctx){
-                ctx.fillStyle=`rgba(0,210,255,${this.o})`; ctx.beginPath();
-                ctx.arc(this.x,this.y,this.s,0,Math.PI*2); ctx.fill();
-            }
-        }
-
         function triggerLevelUpFX() {
             const av = document.getElementById('hud-avatar-container');
             const rect = av.getBoundingClientRect();
@@ -877,11 +947,45 @@
             gsap.to(p, {y: 50 + Math.random()*50, opacity: 0, scale: 0.5, duration: 1, ease: "power1.in", onComplete: ()=>p.remove()});
         }
 
-        function initParticles(){
-            const c=document.getElementById('magic-canvas'); const ctx=c.getContext('2d');
+        function initWeatherSystem(){
+            const c=document.getElementById('magic-canvas'); 
+            const ctx=c.getContext('2d');
             c.width=window.innerWidth; c.height=window.innerHeight;
-            let ps=[]; for(let i=0;i<50;i++) ps.push(new Particle(c.width, c.height));
-            function ani(){ ctx.clearRect(0,0,c.width,c.height); ps.forEach(p=>{p.update(c.height);p.draw(ctx);}); requestAnimationFrame(ani); }
+            
+            const hour = new Date().getHours();
+            const isNight = hour >= 18 || hour < 6;
+            const type = isNight ? 'snow' : 'rain';
+            
+            let ps=[]; 
+            const count = isNight ? 80 : 120;
+
+            class WeatherParticle {
+                constructor() { this.reset(true); }
+                reset(init=false) {
+                    this.x = Math.random() * c.width;
+                    this.y = init ? Math.random() * c.height : -10;
+                    if (type === 'snow') {
+                        this.vx = (Math.random()-0.5)*0.5; this.vy = 1+Math.random()*1.5;
+                        this.s = 2+Math.random()*2; this.a = 0.3+Math.random()*0.5;
+                    } else {
+                        this.vx = 0.5; this.vy = 15+Math.random()*10;
+                        this.l = 15+Math.random()*15; this.a = 0.1+Math.random()*0.2;
+                    }
+                }
+                update() { this.x+=this.vx; this.y+=this.vy; if(this.y>c.height||this.x>c.width) this.reset(); }
+                draw() {
+                    ctx.beginPath();
+                    if (type === 'snow') {
+                        ctx.fillStyle=`rgba(255,255,255,${this.a})`; ctx.arc(this.x,this.y,this.s,0,Math.PI*2); ctx.fill();
+                    } else {
+                        ctx.strokeStyle=`rgba(174,194,224,${this.a})`; ctx.lineWidth=1.5;
+                        ctx.moveTo(this.x,this.y); ctx.lineTo(this.x+this.vx,this.y+this.l); ctx.stroke();
+                    }
+                }
+            }
+
+            for(let i=0;i<count;i++) ps.push(new WeatherParticle());
+            function ani(){ ctx.clearRect(0,0,c.width,c.height); ps.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(ani); }
             ani();
         }
         
@@ -941,7 +1045,27 @@
 
         function scheduleTaunt(){clearTimeout(tauntTimer);const t=Math.random()*5000+10000;tauntTimer=setTimeout(()=>{const b=bosses[currentBossIndex];if(b){const p=b.phrases[Math.floor(Math.random()*b.phrases.length)];const bb=document.getElementById('boss-speech');bb.innerText=p;bb.style.opacity=1;bb.style.top="-140px";gsap.fromTo(bb,{y:20},{y:0,duration:0.3});setTimeout(()=>bb.style.opacity=0,4000);}scheduleTaunt();},t);}
         function resetAFKTimer(){clearTimeout(afkTimer);if(game.afkMode){gsap.to("body",{filter:"none",scale:1,duration:1});game.afkMode=false;}afkTimer=setTimeout(()=>{game.afkMode=true;gsap.to("body",{filter:"blur(5px) sepia(0.5)",scale:1.02,duration:5,repeat:-1,yoyo:true});notificar("zzz...");},300000); }
-        function checkAchievements(t){achievementsDB.forEach(a=>{if(globalData.achievements.includes(a.id))return;let u=false;if(t==='game_start'){if(a.id==='veteran_10'&&prof.totalGames>=10)u=true;if(a.id==='veteran_50'&&prof.totalGames>=50)u=true;if(a.id==='veteran_100'&&prof.totalGames>=100)u=true;}if(t==='levelup'){if(a.id==='lvl_5'&&prof.lvl>=5)u=true;if(a.id==='lvl_10'&&prof.lvl>=10)u=true;if(a.id==='lvl_25'&&prof.lvl>=25)u=true;if(a.id==='lvl_50'&&prof.lvl>=50)u=true;if(a.id==='lvl_100'&&prof.lvl>=100)u=true;}if(u){globalData.achievements.push(a.id);localStorage.setItem('aa_global',JSON.stringify(globalData));showAch(a);}});}
+        
+        function checkAchievements(t){
+            achievementsDB.forEach(a=>{
+                if(globalData.achievements.includes(a.id)) return;
+                let u=false;
+                // Checagem Retroativa (Baseada em Status)
+                if(a.id==='lvl_5' && prof.lvl>=5) u=true;
+                if(a.id==='lvl_10' && prof.lvl>=10) u=true;
+                if(a.id==='lvl_25' && prof.lvl>=25) u=true;
+                if(a.id==='lvl_50' && prof.lvl>=50) u=true;
+                if(a.id==='lvl_100' && prof.lvl>=100) u=true;
+                if(a.id==='veteran_10' && prof.totalGames>=10) u=true;
+                if(a.id==='veteran_50' && prof.totalGames>=50) u=true;
+                if(a.id==='veteran_100' && prof.totalGames>=100) u=true;
+                if(a.id==='score_1k' && prof.maxScore>=1000) u=true;
+                if(a.id==='score_5k' && prof.maxScore>=5000) u=true;
+                
+                if(u){ globalData.achievements.push(a.id); localStorage.setItem('aa_global',JSON.stringify(globalData)); showAch(a); }
+            });
+        }
+        
         function showAch(a){const p=document.getElementById('achievement-popup');document.getElementById('ach-pop-icon').innerText=a.icon;document.getElementById('ach-pop-title').innerText=a.title;document.getElementById('ach-pop-desc').innerText=a.desc;playS('achievement');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),5000);}
         function abrirGrimorioDireto() { navegar('screen-credits'); currentBookPage = 0; renderBookPage(); }
         function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
