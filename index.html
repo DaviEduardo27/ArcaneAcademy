@@ -506,7 +506,9 @@
         const audioManager = new AudioManager();
 
         // --- 3. ESTADO GLOBAL ---
-        let globalData = JSON.parse(localStorage.getItem('aa_global')) || { achievements: [] };
+        let globalData = JSON.parse(localStorage.getItem('aa_global')) || {};
+        if(!globalData.achievements) globalData.achievements = [];
+        if(typeof globalData.grimoireUnlocked === 'undefined') globalData.grimoireUnlocked = false;
         let prof = JSON.parse(localStorage.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0 };
         let cfg = JSON.parse(localStorage.getItem('aa_cfg')) || { m: CONFIG_DEFAULTS.MUSIC_VOL, s: CONFIG_DEFAULTS.SFX_VOL, part: CONFIG_DEFAULTS.PARTICLES };
         let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false };
@@ -626,6 +628,16 @@
         function finishStage() {
             const xpGained = 100 + (game.score/10); prof.xp += xpGained;
             let msg = `Vitória! +${Math.floor(xpGained)} XP.`;
+            
+            // 2° ZERAMENTO DO JOGO (Fase 10 - Gaiaos)
+            if(game.fase === 10 && !game.infiniteMode) {
+                prof.xp += 2000; // Bônus de Zeramento
+                if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; checkAchievements('levelup'); }
+                localStorage.setItem('aa_prof', JSON.stringify(prof));
+                completeGame();
+                return;
+            }
+
             if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; msg = `LEVEL UP! Nível ${prof.lvl}!`; checkAchievements('levelup'); triggerLevelUpFX(); }
             localStorage.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
             clearInterval(bleedInterval);
@@ -636,6 +648,26 @@
             setTimeout(() => {
                 transitionFase(game.fase+1);
             }, 3000);
+        }
+
+        function completeGame() {
+            playS('win');
+            
+            // Desbloqueia Grimório
+            if(!globalData.grimoireUnlocked) {
+                globalData.grimoireUnlocked = true;
+                localStorage.setItem('aa_global', JSON.stringify(globalData));
+                notificar("GRIMÓRIO DESBLOQUEADO!");
+            } else {
+                notificar("A JORNADA ESTÁ COMPLETA!");
+            }
+            
+            // 1° MECANISMO DE SAVE: Limpa o save da run atual pois o jogo foi concluído
+            localStorage.removeItem('aa_save');
+            checkSave();
+
+            // Apresenta a tela final (Grimório)
+            setTimeout(() => { navegar('screen-credits'); currentBookPage = 0; renderBookPage(); }, 2000);
         }
 
         // --- 6. MECÂNICAS E UTILITÁRIOS ---
@@ -733,7 +765,13 @@
             gsap.fromTo(".combo-text",{scale:0, rotation:-15}, {scale:scale, rotation:0, duration:0.4, ease:"elastic.out(1, 0.5)", onComplete:()=>{ gsap.to(".combo-text", {opacity:0, duration:0.3, delay:0.3, onComplete:()=>c.innerHTML=''}); }});
         }
         function showFloatScore(el,pts){const r=el.getBoundingClientRect();const f=document.createElement('div');f.innerText="+"+pts;f.className='float-score';f.style.left=(r.left+r.width/2)+'px';f.style.top=r.top+'px';document.body.appendChild(f);gsap.to(f,{y:-50,opacity:0,duration:1,onComplete:()=>f.remove()});}
-        function checkSave(){const s=localStorage.getItem('aa_save');const b=document.getElementById('btn-continue');if(s)b.classList.remove('disabled');else b.classList.add('disabled');}
+        
+        function checkSave(){
+            const s=localStorage.getItem('aa_save'); const b=document.getElementById('btn-continue');
+            if(s) b.classList.remove('disabled'); else b.classList.add('disabled');
+            // Verifica Grimório
+            const g=document.getElementById('btn-grimoire-menu'); if(globalData.grimoireUnlocked) g.style.display='flex'; else g.style.display='none';
+        }
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
         function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
