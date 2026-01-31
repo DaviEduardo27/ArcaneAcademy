@@ -533,7 +533,7 @@
                     const now = Date.now(); if(now-lastMatch < 3000) { combo++; showCombo(combo); } else { combo=1; } lastMatch = now;
                     
                     // FURY SYSTEM
-                    let isFury = combo >= 2;
+                    let isFury = combo >= 3;
                     if(isFury) {
                         UI.board.classList.add('fury-active');
                         if(combo === 5) notificar("FÚRIA ARCANA ATIVADA!");
