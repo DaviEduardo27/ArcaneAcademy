@@ -57,8 +57,8 @@
             box-shadow: 0 0 30px #4b0082, 0 0 60px #800080, inset 0 0 40px rgba(255,255,255,0.1);
             z-index: 9000; pointer-events: none; opacity: 0;
         }
-        #black-hole::before { content: ''; position: absolute; top: -20%; left: -20%; width: 140%; height: 140%; border-radius: 50%; border: 2px solid rgba(108, 52, 131, 0.5); border-top-color: transparent; border-bottom-color: transparent; animation: bhSpin 2s linear infinite; }
-        #black-hole::after { content: ''; position: absolute; top: -40%; left: -40%; width: 180%; height: 180%; border-radius: 50%; border: 2px dashed rgba(75, 0, 130, 0.3); animation: bhSpin 4s linear infinite reverse; }
+        #black-hole::before { content: ''; position: absolute; top: -20%; left: -20%; width: 140%; height: 140%; border-radius: 50%; border: 2px solid rgba(108, 52, 131, 0.5); border-top-color: transparent; border-bottom-color: transparent; animation: bhSpin 2s linear infinite; filter: url(#gravitational-distortion); }
+        #black-hole::after { content: ''; position: absolute; top: -40%; left: -40%; width: 180%; height: 180%; border-radius: 50%; border: 2px dashed rgba(75, 0, 130, 0.3); animation: bhSpin 4s linear infinite reverse; filter: url(#gravitational-distortion); }
         @keyframes bhSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         /* Chromatic Aberration Class */
@@ -207,7 +207,7 @@
         /* Combo VFX */
         #combo-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 5000; pointer-events: none; }
         .combo-text { font-size: 5rem; font-weight: 800; font-family: 'Cinzel'; background: linear-gradient(to bottom, #fff 20%, var(--accent-gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 20px var(--accent-gold)); letter-spacing: 5px; z-index: 6000; }
-        .combo-text.fury { background: linear-gradient(to bottom, #fff 10%, #ff4500 100%); filter: drop-shadow(0 0 40px #ff4500); }
+        .combo-text.fury { background: linear-gradient(to bottom, #fff 10%, #ff4500 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 40px #ff4500); }
         .float-score { position: absolute; font-family: 'Cinzel'; font-weight: bold; color: var(--accent-gold); text-shadow: 0 0 5px #000; pointer-events: none; z-index: 500; }
 
         /* QUIZ */
@@ -261,6 +261,13 @@
                 <feOffset in="blue" dx="-3" dy="0" result="blue_offset"/>
                 <feBlend mode="screen" in="red_offset" in2="green" result="rg"/>
                 <feBlend mode="screen" in="rg" in2="blue_offset" result="rgb"/>
+            </filter>
+            <filter id="gravitational-distortion">
+                <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="1" result="noise">
+                    <animate attributeName="baseFrequency" values="0.03;0.05;0.03" dur="3s" repeatCount="indefinite" />
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="20" xChannelSelector="R" yChannelSelector="G" />
+                <feGaussianBlur stdDeviation="0.5" />
             </filter>
         </defs>
     </svg>
@@ -320,7 +327,7 @@
                 <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label">Jogar</div></div>
                 <div class="magic-menu-card" id="btn-ngplus" style="display:none; border-color:var(--danger-red);" onclick="playS('click'); iniciarNewGamePlus()"><div class="card-icon" style="color:var(--danger-red);">🔥</div><div class="card-label" style="color:var(--danger-red);">New Game+</div></div>
                 <div class="magic-menu-card" id="btn-infinite" style="display:none; border-color:var(--chaos-purple);" onclick="playS('click'); openInfiniteMenu()"><div class="card-icon" style="color:var(--chaos-purple);">♾️</div><div class="card-label" style="color:var(--chaos-purple);">Infinito</div></div>
-                <div class="magic-menu-card" id="btn-grimoire-menu" style="display:none; border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);">Grimório</div></div>
+                <div class="magic-menu-card" id="btn-grimoire-menu" style="border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="lock-icon" style="display:none;">🔒</div><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);">Grimório</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); abrirPerfilMenu()"><div class="card-icon">🧙‍♂️</div><div class="card-label">Perfil</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); openConfigMenu('menu')"><div class="card-icon">⚙️</div><div class="card-label">Opções</div></div>
             </div>
@@ -392,6 +399,13 @@
             <div style="margin: 20px 0; font-family: 'MedievalSharp'; color: #ccc;">Sobreviva o máximo que puder.<br>A dificuldade aumenta a cada passo.</div>
             <div class="ranking-box"><h3 style="color:var(--accent-gold); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">HALL DAS LENDAS</h3><div id="infinite-ranking-list" style="max-height: 200px; overflow-y: auto; text-align: left; padding: 5px;"></div></div>
             <div class="btn-main" style="border-color:var(--chaos-purple); color:var(--chaos-purple);" onclick="playS('click'); startInfiniteRun()">INICIAR RUN</div>
+        </div>
+    </div>
+
+    <div id="screen-slots" class="screen active" style="display:flex; background: #050505; z-index: 30000;">
+        <div class="panel-glass" style="width: 800px; max-width: 95%;">
+            <h2 style="color:var(--accent-gold); margin-bottom: 10px;">SELECIONE UM PERFIL</h2>
+            <div class="slots-container" id="slots-list" style="display:flex; gap:20px; justify-content:center; margin-top:30px; flex-wrap: wrap;"></div>
         </div>
     </div>
 
@@ -534,31 +548,68 @@
         const audioManager = new AudioManager();
 
         // --- 3. ESTADO GLOBAL ---
-        let globalData = JSON.parse(localStorage.getItem('aa_global')) || {};
-        if(!globalData.achievements) globalData.achievements = [];
-        if(typeof globalData.grimoireUnlocked === 'undefined') globalData.grimoireUnlocked = false;
-        if(typeof globalData.ngPlusUnlocked === 'undefined') globalData.ngPlusUnlocked = false;
-        if(typeof globalData.infiniteUnlocked === 'undefined') globalData.infiniteUnlocked = false;
-        if(!globalData.infiniteHighScores) globalData.infiniteHighScores = [];
-        let prof = JSON.parse(localStorage.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0 };
+        let currentSlotPrefix = "";
+        const DB = {
+            getItem: (k) => { if(k==='aa_cfg') return localStorage.getItem(k); return localStorage.getItem(currentSlotPrefix + k); },
+            setItem: (k,v) => { if(k==='aa_cfg') return localStorage.setItem(k,v); return localStorage.setItem(currentSlotPrefix + k, v); },
+            removeItem: (k) => { if(k==='aa_cfg') return localStorage.removeItem(k); return localStorage.removeItem(currentSlotPrefix + k); }
+        };
+
+        let globalData = null;
+        let prof = null;
+        let justUnlockedGrimoire = false;
+
+        function initProfileData() {
+            globalData = JSON.parse(DB.getItem('aa_global')) || { achievements: [], infiniteHighScores: [] };
+            prof = JSON.parse(DB.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0, grimoireUnlocked: false, ngPlusUnlocked: false, infiniteUnlocked: false };
+            if(!globalData.achievements) globalData.achievements = [];
+        }
+
         let cfg = JSON.parse(localStorage.getItem('aa_cfg')) || { m: CONFIG_DEFAULTS.MUSIC_VOL, s: CONFIG_DEFAULTS.SFX_VOL, part: CONFIG_DEFAULTS.PARTICLES };
         let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false, ngPlus: false };
         
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
-        let afkTimer, lastMatch = 0, currentBookPage = 0, bleedInterval = null;
+        let afkTimer, lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null;
 
         // --- 4. INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
             audioManager.init();
             initWeatherSystem(); 
-            updateProfUI(); 
             applySettings(); 
-            checkSave();
-            checkAchievements('startup');
             initAudioVisualizer();
+            initSlots(); // Inicia na tela de slots
+        });
 
-            const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
+        function initSlots() {
+            const c = document.getElementById('slots-list'); c.innerHTML = '';
+            for(let i=1; i<=3; i++) {
+                const pKey = `slot_${i}_aa_prof`;
+                const pData = JSON.parse(localStorage.getItem(pKey));
+                let html = '';
+                if(pData) {
+                    const av = avatares[pData.av] || avatares[0];
+                    html = `<div class="btn-delete-slot" onclick="event.stopPropagation(); deleteSlot(${i})">✖</div>
+                            <img src="Imagens/Personagens/${av.file}" class="slot-avatar" style="border-color:${av.color}">
+                            <div class="slot-info"><div class="slot-name">${pData.nome}</div><div>Nível ${pData.lvl}</div></div>`;
+                } else {
+                    html = `<div class="slot-avatar" style="background:#111; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#333;">+</div>
+                            <div class="slot-info"><div class="slot-name" style="color:#666;">Novo Jogo</div><div>Slot ${i}</div></div>`;
+                }
+                const div = document.createElement('div'); div.className = 'slot-card'; div.innerHTML = html;
+                div.onclick = () => loadSlot(i); c.appendChild(div);
+            }
+        }
+
+        function deleteSlot(i) { if(confirm(`Apagar Slot ${i}?`)) { localStorage.removeItem(`slot_${i}_aa_prof`); localStorage.removeItem(`slot_${i}_aa_save`); localStorage.removeItem(`slot_${i}_aa_global`); initSlots(); } }
+
+        function loadSlot(i) {
+            currentSlotPrefix = `slot_${i}_`;
+            initProfileData();
+            updateProfUI(); checkSave(); checkAchievements('startup');
+            document.getElementById('screen-slots').style.display = 'none';
+            
+            const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{}); // Inicia intro
             gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
             
             document.addEventListener("mousemove", resetAFKTimer); resetAFKTimer();
@@ -570,9 +621,9 @@
         
         function navegar(id) { document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';}); const t=document.getElementById(id); if(t){t.style.display='flex';setTimeout(()=>t.classList.add('active'),10);} }
         
-        function novoJogo(isNgPlus = false) { if(prof.nome==="Aprendiz"){notificar("Configure seu perfil!");abrirPerfilMenu();return;} localStorage.removeItem('aa_save'); game={fase:1,score:0,infiniteMode:false,chaosActive:false, ngPlus: isNgPlus}; prof.totalGames++; localStorage.setItem('aa_prof',JSON.stringify(prof)); checkAchievements('game_start'); audioManager.playGame(); transitionFase(1); }
+        function novoJogo(isNgPlus = false) { if(prof.nome==="Aprendiz"){notificar("Configure seu perfil!");abrirPerfilMenu();return;} DB.removeItem('aa_save'); game={fase:1,score:0,infiniteMode:false,chaosActive:false, ngPlus: isNgPlus}; prof.totalGames++; DB.setItem('aa_prof',JSON.stringify(prof)); checkAchievements('game_start'); audioManager.playGame(); transitionFase(1); }
         function iniciarNewGamePlus() { if(confirm("Atenção: O modo New Game+ é extremamente difícil. Menos tempo, mais cartas. Deseja prosseguir?")) novoJogo(true); }
-        function continuarJogo() { const s=JSON.parse(localStorage.getItem('aa_save')); if(s){game=s;audioManager.playGame();transitionFase(game.fase);} }
+        function continuarJogo() { const s=JSON.parse(DB.getItem('aa_save')); if(s){game=s;audioManager.playGame();transitionFase(game.fase);} }
 
         function transitionFase(f) {
             playS('teleport');
@@ -609,7 +660,7 @@
                 UI.board.appendChild(wrapper);
             });
             clearInterval(timer); startTimer(game.ngPlus ? 45 : 60); // NG+ tem 45s
-            scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) localStorage.setItem('aa_save', JSON.stringify(game));
+            scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) DB.setItem('aa_save', JSON.stringify(game));
         }
 
         function cardClick(c, val) {
@@ -667,16 +718,16 @@
             if(game.score > prof.maxScore) prof.maxScore = game.score;
             
             // 2° ZERAMENTO DO JOGO (Fase 10 - Gaiaos)
-            if(game.fase === 10 && !game.infiniteMode) {
+            if(game.fase >= 10 && !game.infiniteMode) {
                 prof.xp += 2000; // Bônus de Zeramento
                 if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; checkAchievements('levelup'); }
-                localStorage.setItem('aa_prof', JSON.stringify(prof));
+                DB.setItem('aa_prof', JSON.stringify(prof));
                 completeGame();
                 return;
             }
 
             if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; msg = `LEVEL UP! Nível ${prof.lvl}!`; checkAchievements('levelup'); triggerLevelUpFX(); }
-            localStorage.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
+            DB.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
             clearInterval(bleedInterval);
             
             notificar(msg);
@@ -691,22 +742,27 @@
             playS('win');
             
             // Desbloqueia Grimório
-            if(!globalData.grimoireUnlocked) {
-                globalData.grimoireUnlocked = true;
-                globalData.ngPlusUnlocked = true; // Desbloqueia NG+
-                globalData.infiniteUnlocked = true; // Desbloqueia Infinito
-                localStorage.setItem('aa_global', JSON.stringify(globalData));
+            if(!prof.grimoireUnlocked) {
+                prof.grimoireUnlocked = true;
+                prof.ngPlusUnlocked = true; // Desbloqueia NG+
+                prof.infiniteUnlocked = true; // Desbloqueia Infinito
+                DB.setItem('aa_prof', JSON.stringify(prof));
                 notificar("GRIMÓRIO DESBLOQUEADO!");
+                justUnlockedGrimoire = true; // Flag para animação
             } else {
                 notificar("A JORNADA ESTÁ COMPLETA!");
             }
             
             // 1° MECANISMO DE SAVE: Limpa o save da run atual pois o jogo foi concluído
-            localStorage.removeItem('aa_save');
+            DB.removeItem('aa_save');
             checkSave();
 
             // Apresenta a tela final (Grimório)
-            setTimeout(() => { playEndingCredits(); }, 2000);
+            setTimeout(() => { 
+                document.getElementById('screen-game').style.display = 'none'; // Remove a tela congelada
+                document.getElementById('dynamic-bg-layer').className = 'env-default'; // Reseta o fundo bugado
+                playEndingCredits(); 
+            }, 2000);
         }
 
         function playEndingCredits() {
@@ -739,9 +795,9 @@
         }
 
         function startInfiniteRun() {
-            document.getElementById('modal-infinite').style.display = 'none'; localStorage.removeItem('aa_save');
+            document.getElementById('modal-infinite').style.display = 'none'; DB.removeItem('aa_save');
             game = { fase: 1, score: 0, infiniteMode: true, chaosActive: false, ngPlus: false };
-            prof.totalGames++; localStorage.setItem('aa_prof', JSON.stringify(prof));
+            prof.totalGames++; DB.setItem('aa_prof', JSON.stringify(prof));
             audioManager.playGame(); transitionFase(1);
         }
 
@@ -760,7 +816,7 @@
 
             setTimeout(() => {
                 const entry = { name: prof.nome, score: game.score, fase: game.fase, date: new Date().toLocaleDateString() };
-                globalData.infiniteHighScores.push(entry); localStorage.setItem('aa_global', JSON.stringify(globalData));
+                globalData.infiniteHighScores.push(entry); DB.setItem('aa_global', JSON.stringify(globalData));
                 notificar("O Vazio consumiu tudo...");
                 gsap.to(bh, { scale: 0, opacity: 0, duration: 0.5, delay: 0.5 });
                 setTimeout(() => { sairParaMenu(); setTimeout(() => openInfiniteMenu(), 500); }, 2000);
@@ -807,7 +863,7 @@
                 gsap.to(w, { x: dx, y: dy, scale: 0, rotation: 720, opacity: 0, duration: 0.8, ease: "power2.in", delay: Math.random()*0.1 });
             });
 
-            setTimeout(() => {
+            chaosInternalTimer = setTimeout(() => {
                 const icons = validCards.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
                 validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerText = icons[i]; });
                 
@@ -819,7 +875,18 @@
         }
 
         function quiz(msg) { 
-            clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(tauntTimer); 
+            clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); 
+            
+            // HOTFIX: Parar Mecânicas de Caos e Resetar Visual
+            clearTimeout(chaosTimer); clearTimeout(tauntTimer); clearTimeout(chaosInternalTimer);
+            gsap.killTweensOf(".card-wrapper"); gsap.killTweensOf(".card"); gsap.killTweensOf("#black-hole");
+            
+            // Reseta o tabuleiro para estado limpo
+            gsap.set(".card-wrapper", { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, clearProps: "all" });
+            gsap.set("#black-hole", { scale: 0, opacity: 0 });
+            document.querySelectorAll('.chaos-glow').forEach(c => c.classList.remove('chaos-glow'));
+            game.chaosActive = false;
+
             const m=document.getElementById('modal-quiz'); 
             const p=document.getElementById('quiz-paper'); 
             
@@ -852,7 +919,7 @@
                 gameOverInfinite();
                 return;
             }
-            prof.quizStreak = 0; localStorage.setItem('aa_prof', JSON.stringify(prof));
+            prof.quizStreak = 0; DB.setItem('aa_prof', JSON.stringify(prof));
             playS('thunder'); 
             document.getElementById('modal-quiz').style.display='none'; 
             gsap.fromTo("#fx-overlay", {backgroundColor:"#fff", opacity:0.8}, {opacity:0, duration:0.8}); // Clarão
@@ -875,20 +942,30 @@
         function showFloatScore(el,pts){const r=el.getBoundingClientRect();const f=document.createElement('div');f.innerText="+"+pts;f.className='float-score';f.style.left=(r.left+r.width/2)+'px';f.style.top=r.top+'px';document.body.appendChild(f);gsap.to(f,{y:-50,opacity:0,duration:1,onComplete:()=>f.remove()});}
         
         function checkSave(){
-            const s=localStorage.getItem('aa_save'); const b=document.getElementById('btn-continue');
+            const s=DB.getItem('aa_save'); const b=document.getElementById('btn-continue');
             if(s) b.classList.remove('disabled'); else b.classList.add('disabled');
-            // Verifica Grimório
-            const g=document.getElementById('btn-grimoire-menu'); if(globalData.grimoireUnlocked) g.style.display='flex'; else g.style.display='none';
-            const ng=document.getElementById('btn-ngplus'); if(globalData.ngPlusUnlocked) ng.style.display='flex'; else ng.style.display='none';
-            const inf=document.getElementById('btn-infinite'); if(globalData.infiniteUnlocked) inf.style.display='flex'; else inf.style.display='none';
+            
+            // Verifica Grimório e Animação de Cadeado
+            const g=document.getElementById('btn-grimoire-menu'); 
+            if(prof.grimoireUnlocked) {
+                g.classList.remove('locked'); g.querySelector('.lock-icon').style.display='none';
+                if(justUnlockedGrimoire) {
+                    const l = g.querySelector('.lock-icon'); l.style.display='block'; l.classList.add('breaking');
+                    setTimeout(()=>{l.style.display='none'; l.classList.remove('breaking');}, 1500);
+                    justUnlockedGrimoire = false;
+                }
+            } else { g.classList.add('locked'); g.querySelector('.lock-icon').style.display='block'; }
+
+            const ng=document.getElementById('btn-ngplus'); if(prof.ngPlusUnlocked) ng.style.display='flex'; else ng.style.display='none';
+            const inf=document.getElementById('btn-infinite'); if(prof.infiniteUnlocked) inf.style.display='flex'; else inf.style.display='none';
         }
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
-        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); document.getElementById('screen-ending-credits').style.display='none'; clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
+        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); document.getElementById('screen-ending-credits').style.display='none'; clearTimeout(chaosTimer); clearTimeout(chaosInternalTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
         function abrirPerfilMenu(){navegar('screen-profile');if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}}
-        function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;localStorage.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
+        function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;DB.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
         function editarPerfil(){document.getElementById('profile-dash').style.display='none';document.getElementById('profile-edit').style.display='block';}
         function mudarAvatar(d){prof.av=(prof.av+d+avatares.length)%avatares.length;updateProfUI();}
         function updateProfUI(){
@@ -901,9 +978,9 @@
         function openConfigMenu(o){lastScreen=o==='game'?'screen-game':'screen-menu';const q=document.getElementById('btn-quit-match'); if(o==='game')q.style.display='block'; else q.style.display='none'; navegar('screen-settings');}
         function voltarConfig(){navegar(lastScreen);}
         function applySettings(){audioManager.updateVolume();document.getElementById('rng-musica').value=cfg.m;document.getElementById('rng-sfx').value=cfg.s;document.getElementById('chk-part').checked=cfg.part;setGfx('part',cfg.part);}
-        function setGfx(t,v){cfg[t]=v;if(t==='part')document.body.classList.toggle('no-particles',!v);localStorage.setItem('aa_cfg',JSON.stringify(cfg));}
-        function setAudio(t,v){if(t==='m')cfg.m=v;if(t==='s')cfg.s=v;localStorage.setItem('aa_cfg',JSON.stringify(cfg));audioManager.updateVolume();}
-        function deletarSave() { if(confirm("Apagar tudo?")) { localStorage.removeItem('aa_prof'); localStorage.removeItem('aa_save'); location.reload(); } }
+        function setGfx(t,v){cfg[t]=v;if(t==='part')document.body.classList.toggle('no-particles',!v);DB.setItem('aa_cfg',JSON.stringify(cfg));}
+        function setAudio(t,v){if(t==='m')cfg.m=v;if(t==='s')cfg.s=v;DB.setItem('aa_cfg',JSON.stringify(cfg));audioManager.updateVolume();}
+        function deletarSave() { if(confirm("Apagar tudo?")) { DB.removeItem('aa_prof'); DB.removeItem('aa_save'); location.reload(); } }
 
         // --- 7. VFX E ANIMAÇÕES ---
         function triggerLevelUpFX() {
@@ -1062,7 +1139,7 @@
                 if(a.id==='score_1k' && prof.maxScore>=1000) u=true;
                 if(a.id==='score_5k' && prof.maxScore>=5000) u=true;
                 
-                if(u){ globalData.achievements.push(a.id); localStorage.setItem('aa_global',JSON.stringify(globalData)); showAch(a); }
+                if(u){ globalData.achievements.push(a.id); DB.setItem('aa_global',JSON.stringify(globalData)); showAch(a); }
             });
         }
         
