@@ -144,7 +144,7 @@
         .boss-hit { animation: hitBasic 0.2s; } @keyframes hitBasic { 0%{filter:brightness(10) contrast(2);} 100%{filter:brightness(1);} }
 
         /* CARDS - HOTFIX FLIP & BACK */
-        .card-grid { display: grid; gap: 20px; perspective: 1200px; z-index: 10; } .grid-4 { grid-template-columns: repeat(4, 1fr); } .grid-5 { grid-template-columns: repeat(5, 1fr); }
+        .card-grid { display: grid; gap: 20px; perspective: 1200px; z-index: 10; } .grid-4 { grid-template-columns: repeat(4, 1fr); } .grid-5 { grid-template-columns: repeat(5, 1fr); } .grid-6 { grid-template-columns: repeat(6, 1fr); }
         .card-wrapper { width: 100px; height: 140px; position: relative; animation: cardFloat 3s infinite alternate ease-in-out; transition: transform 0.3s; }
         .card-wrapper:hover { transform: translateY(-10px) scale(1.05); z-index: 50; }
         
@@ -305,6 +305,7 @@
             <div class="menu-options-container">
                 <div class="magic-menu-card disabled" id="btn-continue" onclick="playS('click'); continuarJogo()"><div class="card-icon">📜</div><div class="card-label">Continuar</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label">Jogar</div></div>
+                <div class="magic-menu-card" id="btn-ngplus" style="display:none; border-color:var(--danger-red);" onclick="playS('click'); iniciarNewGamePlus()"><div class="card-icon" style="color:var(--danger-red);">🔥</div><div class="card-label" style="color:var(--danger-red);">New Game+</div></div>
                 <div class="magic-menu-card" id="btn-infinite" style="display:none; border-color:var(--chaos-purple);" onclick="playS('click'); iniciarModoInfinito()"><div class="card-icon" style="color:var(--chaos-purple);">♾️</div><div class="card-label" style="color:var(--chaos-purple);">Infinito</div></div>
                 <div class="magic-menu-card" id="btn-grimoire-menu" style="display:none; border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);">Grimório</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); abrirPerfilMenu()"><div class="card-icon">🧙‍♂️</div><div class="card-label">Perfil</div></div>
@@ -365,6 +366,11 @@
             <div class="grimoire-nav"><button class="page-btn" id="prev-btn" onclick="prevPage()">❮</button><div class="page-number">Página <span id="page-num">1</span></div><button class="page-btn" id="next-btn" onclick="nextPage()">❯</button></div>
         </div>
         <div class="grimoire-actions"><div class="btn-main" style="width:200px;" onclick="playS('click'); sairParaMenu()">Menu Principal</div></div>
+    </div>
+
+    <div id="screen-ending-credits">
+        <div class="credits-content" id="credits-scroll-area"></div>
+        <div class="btn-main" style="position:fixed; bottom:30px; right:30px; width:auto; padding:10px 30px; z-index:25001;" onclick="sairParaMenu()">Pular</div>
     </div>
 
     <div id="exit-screen"><div style="font-family:'Cinzel'; font-size:2rem; margin-bottom:20px; color:var(--accent-gold); text-shadow:0 0 10px var(--accent-gold);">Até logo, Mago.</div></div>
@@ -509,9 +515,10 @@
         let globalData = JSON.parse(localStorage.getItem('aa_global')) || {};
         if(!globalData.achievements) globalData.achievements = [];
         if(typeof globalData.grimoireUnlocked === 'undefined') globalData.grimoireUnlocked = false;
+        if(typeof globalData.ngPlusUnlocked === 'undefined') globalData.ngPlusUnlocked = false;
         let prof = JSON.parse(localStorage.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0 };
         let cfg = JSON.parse(localStorage.getItem('aa_cfg')) || { m: CONFIG_DEFAULTS.MUSIC_VOL, s: CONFIG_DEFAULTS.SFX_VOL, part: CONFIG_DEFAULTS.PARTICLES };
-        let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false };
+        let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false, ngPlus: false };
         
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
         let afkTimer, lastMatch = 0, currentBookPage = 0, bleedInterval = null;
@@ -538,7 +545,8 @@
         
         function navegar(id) { document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';}); const t=document.getElementById(id); if(t){t.style.display='flex';setTimeout(()=>t.classList.add('active'),10);} }
         
-        function novoJogo() { if(prof.nome==="Aprendiz"){notificar("Configure seu perfil!");abrirPerfilMenu();return;} localStorage.removeItem('aa_save'); game={fase:1,score:0,infiniteMode:false,chaosActive:false}; prof.totalGames++; localStorage.setItem('aa_prof',JSON.stringify(prof)); checkAchievements('game_start'); audioManager.playGame(); transitionFase(1); }
+        function novoJogo(isNgPlus = false) { if(prof.nome==="Aprendiz"){notificar("Configure seu perfil!");abrirPerfilMenu();return;} localStorage.removeItem('aa_save'); game={fase:1,score:0,infiniteMode:false,chaosActive:false, ngPlus: isNgPlus}; prof.totalGames++; localStorage.setItem('aa_prof',JSON.stringify(prof)); checkAchievements('game_start'); audioManager.playGame(); transitionFase(1); }
+        function iniciarNewGamePlus() { if(confirm("Atenção: O modo New Game+ é extremamente difícil. Menos tempo, mais cartas. Deseja prosseguir?")) novoJogo(true); }
         function continuarJogo() { const s=JSON.parse(localStorage.getItem('aa_save')); if(s){game=s;audioManager.playGame();transitionFase(game.fase);} }
 
         function transitionFase(f) {
@@ -554,11 +562,11 @@
             let bIdx = (f-1)%bosses.length; if(game.infiniteMode) bIdx = Math.floor(Math.random()*bosses.length); currentBossIndex = bIdx; const b = bosses[bIdx];
             document.getElementById('boss-img-tag').src = `Imagens/Monstros/${b.file}`; document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.textShadow = "0 0 20px " + b.color; document.getElementById('dynamic-bg-layer').className = b.env;
             
-            let n=16; // Mantido fixo em 16 cartas para balanceamento
+            let n = game.ngPlus ? 24 : 16; // NG+ tem 24 cartas, Normal tem 16
             const p=n/2; hpMax=p; hp=p; updateHP(); total=p; pares=0; cartas=[]; travado=false; combo=0;
             clearInterval(bleedInterval); // Limpa sangramento anterior
             
-            const gridClass = (n===20)?'grid-5':'grid-4'; 
+            let gridClass = 'grid-4'; if(n===20) gridClass='grid-5'; if(n===24) gridClass='grid-6';
             const rewards = getRewards(prof.lvl);
             UI.board.className = `card-grid ${gridClass} ${rewards.cardSkin}`;
             
@@ -572,7 +580,7 @@
                 wrapper.appendChild(c);
                 UI.board.appendChild(wrapper);
             });
-            clearInterval(timer); startTimer(60); 
+            clearInterval(timer); startTimer(game.ngPlus ? 45 : 60); // NG+ tem 45s
             scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) localStorage.setItem('aa_save', JSON.stringify(game));
         }
 
@@ -656,6 +664,7 @@
             // Desbloqueia Grimório
             if(!globalData.grimoireUnlocked) {
                 globalData.grimoireUnlocked = true;
+                globalData.ngPlusUnlocked = true; // Desbloqueia NG+
                 localStorage.setItem('aa_global', JSON.stringify(globalData));
                 notificar("GRIMÓRIO DESBLOQUEADO!");
             } else {
@@ -667,7 +676,25 @@
             checkSave();
 
             // Apresenta a tela final (Grimório)
-            setTimeout(() => { navegar('screen-credits'); currentBookPage = 0; renderBookPage(); }, 2000);
+            setTimeout(() => { playEndingCredits(); }, 2000);
+        }
+
+        function playEndingCredits() {
+            const c = document.getElementById('credits-scroll-area');
+            let h = `<div class="credit-section"><div class="credit-header">Arcane Academy</div><div class="credit-role">Desenvolvimento & Design</div><div class="credit-name">Davi Eduardo (Kyter)</div></div>`;
+            
+            h += `<div class="credit-section"><div class="credit-header">Lendas Enfrentadas</div><div class="credit-grid">`;
+            bosses.forEach(b => { h += `<div class="credit-card"><img src="Imagens/Monstros/${b.file}"><div><div style="color:${b.color}; font-weight:bold;">${b.n}</div><div style="font-size:0.8rem; color:#aaa;">${b.title}</div></div></div>`; });
+            h += `</div></div>`;
+
+            h += `<div class="credit-section"><div class="credit-header">Conquistas do Reino</div><div class="credit-grid">`;
+            achievementsDB.forEach(a => { h += `<div class="credit-card"><div style="font-size:1.5rem;">${a.icon}</div><div><div style="color:#fff; font-weight:bold;">${a.title}</div><div style="font-size:0.8rem; color:#aaa;">${a.desc}</div></div></div>`; });
+            h += `</div></div>`;
+
+            h += `<div class="credit-section"><div class="credit-header">Obrigado por Jogar</div><div class="credit-role">A Magia Continua...</div></div>`;
+
+            c.innerHTML = h;
+            document.getElementById('screen-ending-credits').style.display = 'flex';
         }
 
         // --- 6. MECÂNICAS E UTILITÁRIOS ---
@@ -771,10 +798,11 @@
             if(s) b.classList.remove('disabled'); else b.classList.add('disabled');
             // Verifica Grimório
             const g=document.getElementById('btn-grimoire-menu'); if(globalData.grimoireUnlocked) g.style.display='flex'; else g.style.display='none';
+            const ng=document.getElementById('btn-ngplus'); if(globalData.ngPlusUnlocked) ng.style.display='flex'; else ng.style.display='none';
         }
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
-        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
+        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); document.getElementById('screen-ending-credits').style.display='none'; clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
         function abrirPerfilMenu(){navegar('screen-profile');if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}}
