@@ -402,10 +402,11 @@
         </div>
     </div>
 
-    <div id="screen-slots" class="screen active" style="display:flex; background: #050505; z-index: 30000;">
+    <div id="screen-slots" class="screen" style="display:none; background: #050505; z-index: 30000;">
         <div class="panel-glass" style="width: 800px; max-width: 95%;">
             <h2 style="color:var(--accent-gold); margin-bottom: 10px;">SELECIONE UM PERFIL</h2>
             <div class="slots-container" id="slots-list" style="display:flex; gap:20px; justify-content:center; margin-top:30px; flex-wrap: wrap;"></div>
+            <div class="btn-main" style="margin-top: 30px; width: 200px; margin-left: auto; margin-right: auto;" onclick="playS('click'); navegar('screen-menu')">Voltar</div>
         </div>
     </div>
 
@@ -576,9 +577,16 @@
             UI.init();
             audioManager.init();
             initWeatherSystem(); 
+            initProfileData();
+            updateProfUI(); 
             applySettings(); 
+            checkSave();
+            checkAchievements('startup');
             initAudioVisualizer();
-            initSlots(); // Inicia na tela de slots
+            
+            const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
+            gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
+            document.addEventListener("mousemove", resetAFKTimer); resetAFKTimer();
         });
 
         function initSlots() {
@@ -604,16 +612,26 @@
         function deleteSlot(i) { if(confirm(`Apagar Slot ${i}?`)) { localStorage.removeItem(`slot_${i}_aa_prof`); localStorage.removeItem(`slot_${i}_aa_save`); localStorage.removeItem(`slot_${i}_aa_global`); initSlots(); } }
 
         function loadSlot(i) {
-            currentSlotPrefix = `slot_${i}_`;
-            initProfileData();
-            updateProfUI(); checkSave(); checkAchievements('startup');
-            document.getElementById('screen-slots').style.display = 'none';
-            
-            const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{}); // Inicia intro
-            gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
-            
-            document.addEventListener("mousemove", resetAFKTimer); resetAFKTimer();
-        });
+            playS('click');
+            const fade = document.getElementById('fade-layer');
+            fade.style.zIndex = 40000; // Garante prioridade sobre a tela de slots
+            fade.classList.add('fade-active');
+
+            setTimeout(() => {
+                currentSlotPrefix = `slot_${i}_`;
+                initProfileData();
+                updateProfUI(); checkSave(); checkAchievements('startup');
+                document.getElementById('screen-slots').style.display = 'none';
+                
+                navegar('screen-profile');
+                if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}
+                
+                setTimeout(() => {
+                    fade.classList.remove('fade-active');
+                    setTimeout(() => { fade.style.zIndex = ''; }, 800);
+                }, 200);
+            }, 800);
+        }
 
         // --- 5. NAVEGAÇÃO E FLUXO ---
         function playIntroSound() { const vid=document.getElementById('intro-video'); vid.muted=false; vid.loop=false; vid.currentTime=0; vid.play(); document.getElementById('start-btn-intro').style.display='none'; document.getElementById('skip-text').style.display='block'; vid.onended=endIntro; }
@@ -964,7 +982,7 @@
         function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); document.getElementById('screen-ending-credits').style.display='none'; clearTimeout(chaosTimer); clearTimeout(chaosInternalTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
-        function abrirPerfilMenu(){navegar('screen-profile');if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}}
+        function abrirPerfilMenu(){ initSlots(); document.getElementById('screen-slots').style.display='flex'; }
         function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;DB.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
         function editarPerfil(){document.getElementById('profile-dash').style.display='none';document.getElementById('profile-edit').style.display='block';}
         function mudarAvatar(d){prof.av=(prof.av+d+avatares.length)%avatares.length;updateProfUI();}
