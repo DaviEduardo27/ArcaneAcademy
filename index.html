@@ -316,10 +316,39 @@
     <div id="exit-screen"><div style="font-family:'Cinzel'; font-size:2rem; margin-bottom:20px; color:var(--accent-gold); text-shadow:0 0 10px var(--accent-gold);">Até logo, Mago.</div></div>
 
     <script>
-        let ipcRenderer; try { ipcRenderer = require('electron').ipcRenderer; } catch(e) {}
-        console.log("Arcane Academy [BETA] - Patch 2.0: HOTFIX COMPLETE");
+        /**
+         * Arcane Academy [BETA] - Patch 2.0
+         * Refatoração para Performance e Manutenibilidade
+         */
 
-        /* --- 1. DADOS (BOSSES, ITEMS, QUIZ, CONQUISTAS) --- */
+        let ipcRenderer; 
+        try { ipcRenderer = require('electron').ipcRenderer; } catch(e) {}
+
+        // --- 1. CONSTANTES E DADOS ---
+        const CONFIG_DEFAULTS = {
+            MUSIC_VOL: 0.2,
+            SFX_VOL: 0.5,
+            PARTICLES: true
+        };
+
+        const UI = {
+            screens: {},
+            hud: {},
+            boss: {},
+            modal: {},
+            init() {
+                // Cache de elementos frequentes
+                this.screens.menu = document.getElementById('screen-menu');
+                this.screens.game = document.getElementById('screen-game');
+                this.screens.profile = document.getElementById('screen-profile');
+                this.screens.settings = document.getElementById('screen-settings');
+                this.hud.score = document.getElementById('ui-score');
+                this.hud.tempo = document.getElementById('ui-tempo');
+                this.hud.fase = document.getElementById('ui-fase');
+                this.board = document.getElementById('board');
+            }
+        };
+
         const avatares = [ { file: "mago_aprendiz.png", color: "#3498db" }, { file: "feiticeira_natureza.png", color: "#2ecc71" }, { file: "guerreiro_magico.png", color: "#e74c3c" }, { file: "mago_sabio.png", color: "#9b59b6" }, { file: "feiticeira_lua.png", color: "#00d2ff" } ];
         const titulos = ["Aprendiz", "Novato", "Estudante", "Adepto", "Feiticeiro", "Mago", "Bruxo", "Encantador", "Mestre", "Grão-Mestre", "Arquimago", "Auror", "Lenda", "Semideus", "Divindade Arcana"];
         
@@ -354,7 +383,7 @@
             {id:'infinite_15',icon:'♾️',title:'Eterno',desc:'Fase 15 Infinito.'}, {id:'completionist',icon:'📖',title:'Historiador',desc:'Grimório Completo.'}, {id:'collector',icon:'🃏',title:'Colecionador',desc:'Todas Skins.'}, {id:'fashion',icon:'🧙‍♀️',title:'Estiloso',desc:'Todos Avatares.'}
         ];
 
-        /* --- 2. ÁUDIO & ESTADO --- */
+        // --- 2. GERENCIAMENTO DE ÁUDIO ---
         const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3') };
         class AudioManager { 
             constructor(){this.bgMusic=null;this.gameMusic=null;}
@@ -366,24 +395,35 @@
         } 
         const audioManager = new AudioManager();
 
+        // --- 3. ESTADO GLOBAL ---
         let globalData = JSON.parse(localStorage.getItem('aa_global')) || { achievements: [] };
         let prof = JSON.parse(localStorage.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0 };
-        let cfg = JSON.parse(localStorage.getItem('aa_cfg')) || { m: 0.2, s: 0.5, part: true };
+        let cfg = JSON.parse(localStorage.getItem('aa_cfg')) || { m: CONFIG_DEFAULTS.MUSIC_VOL, s: CONFIG_DEFAULTS.SFX_VOL, part: CONFIG_DEFAULTS.PARTICLES };
         let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false };
-        let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, deckQuiz=[], lastScreen='screen-menu', currentBossIndex=0;
+        
+        let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
+        let afkTimer, lastMatch = 0, currentBookPage = 0;
 
-        /* --- 3. INICIALIZAÇÃO --- */
-        window.onload = () => {
-            audioManager.init(); // Inicializa audio quando o DOM existe
-            initParticles(); updateProfUI(); applySettings(); checkSave();
+        // --- 4. INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init();
+            audioManager.init();
+            initParticles(); 
+            updateProfUI(); 
+            applySettings(); 
+            checkSave();
+            initAudioVisualizer();
+
             const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
             gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
+            
             document.addEventListener("mousemove", resetAFKTimer); resetAFKTimer();
-        };
+        });
 
-        /* --- 4. NAVEGAÇÃO E FLUXO PRINCIPAL --- */
+        // --- 5. NAVEGAÇÃO E FLUXO ---
         function playIntroSound() { const vid=document.getElementById('intro-video'); vid.muted=false; vid.loop=false; vid.currentTime=0; vid.play(); document.getElementById('start-btn-intro').style.display='none'; document.getElementById('skip-text').style.display='block'; vid.onended=endIntro; }
         function endIntro() { document.getElementById('intro-video').pause(); gsap.to('#screen-intro', {opacity:0, duration:1, onComplete:()=>{ document.getElementById('screen-intro').style.display='none'; navegar('screen-menu'); audioManager.playMenu(); }}); }
+        
         function navegar(id) { document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';}); const t=document.getElementById(id); if(t){t.style.display='flex';setTimeout(()=>t.classList.add('active'),10);} }
         
         function novoJogo() { if(prof.nome==="Aprendiz"){notificar("Configure seu perfil!");abrirPerfilMenu();return;} localStorage.removeItem('aa_save'); game={fase:1,score:0,infiniteMode:false,chaosActive:false}; prof.totalGames++; localStorage.setItem('aa_prof',JSON.stringify(prof)); checkAchievements('game_start'); audioManager.playGame(); transitionFase(1); }
@@ -392,13 +432,13 @@
         function transitionFase(f) {
             const fade = document.getElementById('fade-layer'); fade.classList.add('fade-active'); playS('alohomora');
             setTimeout(() => {
-                document.getElementById('screen-menu').style.display = 'none'; navegar('screen-game'); 
+                UI.screens.menu.style.display = 'none'; navegar('screen-game'); 
                 try { carregarFase(f); } catch(e) { console.error(e); sairParaMenu(); } finally { setTimeout(()=>fade.classList.remove('fade-active'), 500); }
             }, 800);
         }
 
         function carregarFase(f) {
-            game.fase = f; document.getElementById('ui-fase').innerText = f; document.getElementById('ui-score').innerText = game.score; document.getElementById('board').innerHTML = '';
+            game.fase = f; UI.hud.fase.innerText = f; UI.hud.score.innerText = game.score; UI.board.innerHTML = '';
             let bIdx = (f-1)%bosses.length; if(game.infiniteMode) bIdx = Math.floor(Math.random()*bosses.length); currentBossIndex = bIdx; const b = bosses[bIdx];
             document.getElementById('boss-img-tag').src = `Imagens/Monstros/${b.file}`; document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.color = b.color; document.getElementById('dynamic-bg-layer').className = b.env;
             
@@ -407,12 +447,12 @@
             
             const gridClass = (n===20)?'grid-5':'grid-4'; 
             const rewards = getRewards(prof.lvl);
-            document.getElementById('board').className = `card-grid ${gridClass} ${rewards.cardSkin}`;
+            UI.board.className = `card-grid ${gridClass} ${rewards.cardSkin}`;
             
             let deck = items.slice(0, p); deck = [...deck, ...deck].sort(()=>Math.random()-0.5);
             deck.forEach(icon => {
                 const c = document.createElement('div'); c.className = 'card'; c.dataset.icon = icon; c.innerHTML = `<div class="face front">${icon}</div><div class="face back"></div>`;
-                c.onclick = () => cardClick(c, icon); document.getElementById('board').appendChild(c);
+                c.onclick = () => cardClick(c, icon); UI.board.appendChild(c);
             });
             clearInterval(timer); startTimer(60); 
             scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) localStorage.setItem('aa_save', JSON.stringify(game));
@@ -430,7 +470,7 @@
                     playS('match'); c1.el.classList.add('matched'); c2.el.classList.add('matched'); pares++; hp--; updateHP(); 
                     const now = Date.now(); if(now-lastMatch < 3000) { combo++; showCombo(combo); } else { combo=1; } lastMatch = now;
                     let pts = Math.floor(100*combo); game.score+=pts; document.getElementById('ui-score').innerText=game.score; showFloatScore(c1.el, pts);
-                    createMagicBurst(c1.el.getBoundingClientRect().left, c1.el.getBoundingClientRect().top);
+                    if(cfg.part) createMagicBurst(c1.el.getBoundingClientRect().left, c1.el.getBoundingClientRect().top);
                     cartas=[]; travado=false;
                     if(pares === total) { clearInterval(timer); clearTimeout(chaosTimer); clearTimeout(tauntTimer); setTimeout(() => { playS('win'); finishStage(); }, 1000); }
                 } else {
@@ -458,8 +498,8 @@
             }, 1500);
         }
 
-        /* --- 5. MECÂNICAS & UTILS --- */
-        function startTimer(t) { tempo=t; document.getElementById('ui-tempo').innerText=tempo; timer=setInterval(()=>{tempo--;document.getElementById('ui-tempo').innerText=tempo;if(tempo<=0){clearInterval(timer);quiz("Tempo Esgotado!");}},1000); }
+        // --- 6. MECÂNICAS E UTILITÁRIOS ---
+        function startTimer(t) { tempo=t; UI.hud.tempo.innerText=tempo; timer=setInterval(()=>{tempo--;UI.hud.tempo.innerText=tempo;if(tempo<=0){clearInterval(timer);quiz("Tempo Esgotado!");}},1000); }
         function updateHP() { document.getElementById('hp-bar').style.width = ((hp/hpMax)*100)+'%'; }
         
         function scheduleNextChaos() { clearTimeout(chaosTimer); const time = Math.random()*(15000-10000)+10000; chaosTimer = setTimeout(() => { triggerChaosShuffle(); scheduleNextChaos(); }, time); }
@@ -508,9 +548,29 @@
         function setAudio(t,v){if(t==='m')cfg.m=v;if(t==='s')cfg.s=v;localStorage.setItem('aa_cfg',JSON.stringify(cfg));audioManager.updateVolume();}
         function deletarSave() { if(confirm("Apagar tudo?")) { localStorage.removeItem('aa_prof'); localStorage.removeItem('aa_save'); location.reload(); } }
 
-        function initParticles(){const c=document.getElementById('magic-canvas');const ctx=c.getContext('2d');c.width=window.innerWidth;c.height=window.innerHeight;let ps=[];class P{constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.s=Math.random()*2;this.sy=Math.random();this.o=Math.random()*0.5;}u(){this.y-=this.sy;if(this.y<0)this.y=c.height;}d(){ctx.fillStyle=`rgba(0,210,255,${this.o})`;ctx.beginPath();ctx.arc(this.x,this.y,this.s,0,Math.PI*2);ctx.fill();}}for(let i=0;i<50;i++)ps.push(new P());function ani(){ctx.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.u();p.d();});requestAnimationFrame(ani);}ani();}
+        // --- 7. VFX E ANIMAÇÕES ---
+        class Particle {
+            constructor(w, h){
+                this.x=Math.random()*w; this.y=Math.random()*h;
+                this.s=Math.random()*2; this.sy=Math.random(); this.o=Math.random()*0.5;
+            }
+            update(h){ this.y-=this.sy; if(this.y<0)this.y=h; }
+            draw(ctx){
+                ctx.fillStyle=`rgba(0,210,255,${this.o})`; ctx.beginPath();
+                ctx.arc(this.x,this.y,this.s,0,Math.PI*2); ctx.fill();
+            }
+        }
+
+        function initParticles(){
+            const c=document.getElementById('magic-canvas'); const ctx=c.getContext('2d');
+            c.width=window.innerWidth; c.height=window.innerHeight;
+            let ps=[]; for(let i=0;i<50;i++) ps.push(new Particle(c.width, c.height));
+            function ani(){ ctx.clearRect(0,0,c.width,c.height); ps.forEach(p=>{p.update(c.height);p.draw(ctx);}); requestAnimationFrame(ani); }
+            ani();
+        }
+
         function scheduleTaunt(){clearTimeout(tauntTimer);const t=Math.random()*5000+10000;tauntTimer=setTimeout(()=>{const b=bosses[currentBossIndex];if(b){const p=b.phrases[Math.floor(Math.random()*b.phrases.length)];const bb=document.getElementById('boss-speech');bb.innerText=p;bb.style.opacity=1;bb.style.top="-140px";gsap.fromTo(bb,{y:20},{y:0,duration:0.3});setTimeout(()=>bb.style.opacity=0,4000);}scheduleTaunt();},t);}
-        function resetAFKTimer(){clearTimeout(afkTimer);if(game.afkMode){gsap.to("body",{filter:"none",scale:1,duration:1});game.afkMode=false;}afkTimer=setTimeout(()=>{game.afkMode=true;gsap.to("body",{filter:"blur(5px) sepia(0.5)",scale:1.02,duration:5,repeat:-1,yoyo:true});notificar("zzz...");},300000);}
+        function resetAFKTimer(){clearTimeout(afkTimer);if(game.afkMode){gsap.to("body",{filter:"none",scale:1,duration:1});game.afkMode=false;}afkTimer=setTimeout(()=>{game.afkMode=true;gsap.to("body",{filter:"blur(5px) sepia(0.5)",scale:1.02,duration:5,repeat:-1,yoyo:true});notificar("zzz...");},300000); }
         function checkAchievements(t){achievementsDB.forEach(a=>{if(globalData.achievements.includes(a.id))return;let u=false;if(t==='game_start'){if(a.id==='veteran_10'&&prof.totalGames>=10)u=true;if(a.id==='veteran_50'&&prof.totalGames>=50)u=true;if(a.id==='veteran_100'&&prof.totalGames>=100)u=true;}if(t==='levelup'){if(a.id==='lvl_5'&&prof.lvl>=5)u=true;if(a.id==='lvl_10'&&prof.lvl>=10)u=true;if(a.id==='lvl_25'&&prof.lvl>=25)u=true;if(a.id==='lvl_50'&&prof.lvl>=50)u=true;if(a.id==='lvl_100'&&prof.lvl>=100)u=true;}if(u){globalData.achievements.push(a.id);localStorage.setItem('aa_global',JSON.stringify(globalData));showAch(a);}});}
         function showAch(a){const p=document.getElementById('achievement-popup');document.getElementById('ach-pop-icon').innerText=a.icon;document.getElementById('ach-pop-title').innerText=a.title;document.getElementById('ach-pop-desc').innerText=a.desc;playS('achievement');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),5000);}
         function abrirGrimorioDireto() { navegar('screen-credits'); currentBookPage = 0; renderBookPage(); }
@@ -526,7 +586,6 @@
         function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
         function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
         function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
-        function spawnParticles() { if(!cfg.part) return; const c = document.getElementById('motes'); c.innerHTML = ''; for(let i=0; i<30; i++) { let p = document.createElement('div'); p.className='mote'; p.style.left = Math.random()*100+'%'; p.style.animationDuration=(5+Math.random()*10)+'s'; c.appendChild(p); } }
     </script>
 </body>
 </html>
