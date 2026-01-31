@@ -36,6 +36,9 @@
         #fx-overlay, #fade-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8000; opacity: 0; }
         #fade-layer { background: #000; z-index: 10000; transition: opacity 0.8s; }
         .fade-active { opacity: 1 !important; pointer-events: all !important; }
+        #time-warning-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9000; opacity: 0; transition: opacity 0.5s; box-shadow: inset 0 0 0 rgba(255,0,0,0); }
+        #time-warning-layer.active { opacity: 1; animation: timePulse 1s infinite ease-in-out; }
+        @keyframes timePulse { 0% { box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.3); } 50% { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8); } 100% { box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.3); } }
         
         /* --- SCREENS --- */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s; z-index: 10; }
@@ -216,6 +219,7 @@
     <div id="vfx-container"></div>
     <div id="fx-overlay"></div>
     <div id="combo-pulse-layer"></div>
+    <div id="time-warning-layer"></div>
     <div id="fade-layer"></div>
     <div id="combo-container"></div>
     <div class="notification-bar" id="notif-bar">Mensagem</div>
@@ -486,7 +490,7 @@
                     let pts = Math.floor(100*combo); game.score+=pts; document.getElementById('ui-score').innerText=game.score; showFloatScore(c1.el, pts);
                     if(cfg.part) createMagicBurst(c1.el.getBoundingClientRect().left, c1.el.getBoundingClientRect().top);
                     cartas=[]; travado=false;
-                    if(pares === total) { clearInterval(timer); clearTimeout(chaosTimer); clearTimeout(tauntTimer); setTimeout(() => { playS('win'); finishStage(); }, 1000); }
+                    if(pares === total) { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(tauntTimer); setTimeout(() => { playS('win'); finishStage(); }, 1000); }
                 } else {
                     combo=0; 
                     setTimeout(()=>{
@@ -516,7 +520,15 @@
         }
 
         // --- 6. MECÂNICAS E UTILITÁRIOS ---
-        function startTimer(t) { tempo=t; UI.hud.tempo.innerText=tempo; timer=setInterval(()=>{tempo--;UI.hud.tempo.innerText=tempo;if(tempo<=0){clearInterval(timer);quiz("Tempo Esgotado!");}},1000); }
+        function startTimer(t) { 
+            tempo=t; UI.hud.tempo.innerText=tempo; 
+            document.getElementById('time-warning-layer').classList.remove('active');
+            timer=setInterval(()=>{
+                tempo--; UI.hud.tempo.innerText=tempo;
+                if(tempo<=10) document.getElementById('time-warning-layer').classList.add('active');
+                if(tempo<=0){ clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); quiz("Tempo Esgotado!"); }
+            },1000); 
+        }
         function updateHP() { document.getElementById('hp-bar').style.width = ((hp/hpMax)*100)+'%'; }
         
         // Intervalo de Caos ajustado para 45s - 90s para não frustrar o jogador
@@ -542,7 +554,7 @@
             });
         }
 
-        function quiz(msg) { clearInterval(timer); clearTimeout(chaosTimer); clearTimeout(tauntTimer); const m=document.getElementById('modal-quiz'); const p=document.getElementById('quiz-paper'); const q=triviaDB[Math.floor(Math.random()*triviaDB.length)]; document.getElementById('quiz-q').innerText=q.p; const c=document.getElementById('quiz-ops'); c.innerHTML=''; q.o.forEach((op, i)=>{ const d=document.createElement('button'); d.className='quiz-opt-btn'; d.innerText=op; d.onclick=()=>{playS('click');if(i===q.r)quizSuccess();else quizFail();}; c.appendChild(d); }); m.style.display='flex'; playS('paper'); gsap.fromTo(p, {scale:0, rotation:-720, opacity:0}, {scale:1, rotation:0, opacity:1, duration:1, ease:"back.out"}); }
+        function quiz(msg) { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(tauntTimer); const m=document.getElementById('modal-quiz'); const p=document.getElementById('quiz-paper'); const q=triviaDB[Math.floor(Math.random()*triviaDB.length)]; document.getElementById('quiz-q').innerText=q.p; const c=document.getElementById('quiz-ops'); c.innerHTML=''; q.o.forEach((op, i)=>{ const d=document.createElement('button'); d.className='quiz-opt-btn'; d.innerText=op; d.onclick=()=>{playS('click');if(i===q.r)quizSuccess();else quizFail();}; c.appendChild(d); }); m.style.display='flex'; playS('paper'); gsap.fromTo(p, {scale:0, rotation:-720, opacity:0}, {scale:1, rotation:0, opacity:1, duration:1, ease:"back.out"}); }
         function quizSuccess() { playS('mischief'); document.getElementById('modal-quiz').style.display='none'; notificar("Correto! Segunda chance."); startTimer(20); }
         function quizFail() { playS('thunder'); document.getElementById('modal-quiz').style.display='none'; notificar("Errado! Fim de jogo."); sairParaMenu(); }
 
@@ -553,7 +565,7 @@
         function checkSave(){const s=localStorage.getItem('aa_save');const b=document.getElementById('btn-continue');if(s)b.classList.remove('disabled');else b.classList.add('disabled');}
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
-        function sairParaMenu() { clearInterval(timer); clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
+        function sairParaMenu() { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
         function abrirPerfilMenu(){navegar('screen-profile');if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}}
