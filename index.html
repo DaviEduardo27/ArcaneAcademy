@@ -393,7 +393,7 @@
         ];
 
         // --- 2. GERENCIAMENTO DE ÁUDIO ---
-        const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3') };
+        const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3'), teleport:new Audio('Sons/teleport.mp3') };
         class AudioManager { 
             constructor(){this.bgMusic=null;this.gameMusic=null;}
             init(){this.bgMusic=document.getElementById('ost-menu');this.gameMusic=document.getElementById('ost-game');this.bgMusic.volume=0.2;this.gameMusic.volume=0.2;}
@@ -511,12 +511,11 @@
             localStorage.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
             
             notificar(msg);
+            playS('win'); playS('alohomora');
+            
             setTimeout(() => {
-                const modalContent = document.getElementById('magic-modal-content');
-                modalContent.innerHTML = `<h3>Fase ${game.fase} Concluída!</h3><p>${msg}</p><div style="display:flex; gap:20px; margin-top:20px;"><button class="magic-alert-btn" onclick="closeMagicAlert(); transitionFase(game.fase+1)">Continuar Jornada</button><button class="magic-alert-btn" style="border-color:var(--danger-red); color:var(--danger-red);" onclick="closeMagicAlert(); sairParaMenu()">Menu Principal</button></div>`;
-                document.getElementById('magic-alert-modal').style.display = 'flex';
-                setTimeout(() => modalContent.classList.add('show'), 10);
-            }, 1500);
+                transitionFase(game.fase+1);
+            }, 3000);
         }
 
         // --- 6. MECÂNICAS E UTILITÁRIOS ---
@@ -555,8 +554,22 @@
         }
 
         function quiz(msg) { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(tauntTimer); const m=document.getElementById('modal-quiz'); const p=document.getElementById('quiz-paper'); const q=triviaDB[Math.floor(Math.random()*triviaDB.length)]; document.getElementById('quiz-q').innerText=q.p; const c=document.getElementById('quiz-ops'); c.innerHTML=''; q.o.forEach((op, i)=>{ const d=document.createElement('button'); d.className='quiz-opt-btn'; d.innerText=op; d.onclick=()=>{playS('click');if(i===q.r)quizSuccess();else quizFail();}; c.appendChild(d); }); m.style.display='flex'; playS('paper'); gsap.fromTo(p, {scale:0, rotation:-720, opacity:0}, {scale:1, rotation:0, opacity:1, duration:1, ease:"back.out"}); }
-        function quizSuccess() { playS('mischief'); document.getElementById('modal-quiz').style.display='none'; notificar("Correto! Segunda chance."); startTimer(20); }
-        function quizFail() { playS('thunder'); document.getElementById('modal-quiz').style.display='none'; notificar("Errado! Fim de jogo."); sairParaMenu(); }
+        function quizSuccess() { 
+            document.getElementById('modal-quiz').style.display='none'; 
+            notificar("O destino lhe concede mais uma chance!"); 
+            playS('teleport');
+            carregarFase(game.fase); // Reinicia fase e timer (50s)
+            // Efeito Espiral
+            gsap.from(".card-wrapper", { duration: 1, scale: 0, rotation: 720, opacity: 0, stagger: { amount: 0.8, grid: "auto", from: "center" }, ease: "back.out(1.2)" });
+        }
+        function quizFail() { 
+            playS('thunder'); 
+            document.getElementById('modal-quiz').style.display='none'; 
+            gsap.fromTo("#fx-overlay", {backgroundColor:"#fff", opacity:0.8}, {opacity:0, duration:0.8}); // Clarão
+            gsap.to(".game-area", {x:"+=20", yoyo:true, repeat:10, duration:0.05, clearProps:"x"}); // Tremor
+            if(game.fase > 1) { notificar("Falha crítica! Regredindo fase..."); setTimeout(() => transitionFase(game.fase - 1), 1500); }
+            else { notificar("Expulso da Academia!"); setTimeout(() => sairParaMenu(), 1500); }
+        }
 
         function playS(k){if(sfx[k])sfx[k].cloneNode().play().catch(()=>{});}
         function notificar(msg){const b=document.getElementById('notif-bar');b.innerText=msg;b.classList.add('show');setTimeout(()=>b.classList.remove('show'),2500);}
