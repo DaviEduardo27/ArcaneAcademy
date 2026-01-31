@@ -125,10 +125,12 @@
 
         /* CARDS - HOTFIX FLIP & BACK */
         .card-grid { display: grid; gap: 20px; perspective: 1200px; z-index: 10; } .grid-4 { grid-template-columns: repeat(4, 1fr); } .grid-5 { grid-template-columns: repeat(5, 1fr); }
-        .card { width: 100px; height: 140px; cursor: pointer; position: relative; transform-style: preserve-3d; animation: cardFloat 3s infinite alternate ease-in-out; }
+        .card-wrapper { width: 100px; height: 140px; position: relative; animation: cardFloat 3s infinite alternate ease-in-out; transition: transform 0.3s; }
+        .card-wrapper:hover { transform: translateY(-10px) scale(1.05); z-index: 50; }
+        
+        .card { width: 100%; height: 100%; cursor: pointer; position: relative; transform-style: preserve-3d; transition: z-index 0.3s; }
         /* OBS: Transição via GSAP no JS, removida do CSS para não conflitar */
         @keyframes cardFloat { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
-        .card:hover { transform: translateY(-15px) scale(1.05); box-shadow: 0 30px 60px rgba(0,0,0,0.9); z-index: 5; }
         
         .face { width: 100%; height: 100%; position: absolute; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem; backface-visibility: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); }
         .front { background: #e0e0e0; transform: rotateY(180deg); border: 2px solid #555; color: #222; }
@@ -451,8 +453,13 @@
             
             let deck = items.slice(0, p); deck = [...deck, ...deck].sort(()=>Math.random()-0.5);
             deck.forEach(icon => {
-                const c = document.createElement('div'); c.className = 'card'; c.dataset.icon = icon; c.innerHTML = `<div class="face front">${icon}</div><div class="face back"></div>`;
-                c.onclick = () => cardClick(c, icon); UI.board.appendChild(c);
+                const wrapper = document.createElement('div'); wrapper.className = 'card-wrapper';
+                const c = document.createElement('div'); c.className = 'card'; 
+                c.dataset.icon = icon; 
+                c.innerHTML = `<div class="face front">${icon}</div><div class="face back"></div>`;
+                c.onclick = () => cardClick(c, icon); 
+                wrapper.appendChild(c);
+                UI.board.appendChild(wrapper);
             });
             clearInterval(timer); startTimer(60); 
             scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) localStorage.setItem('aa_save', JSON.stringify(game));
@@ -460,9 +467,12 @@
 
         function cardClick(c, val) {
             if(travado || game.chaosActive || c.classList.contains('flipped')) return;
-            // Efeito visual de flip 3D real usando rotateY
-            gsap.to(c, {rotateY: 180, duration: 0.4, ease: "back.out(1.7)"});
+            
+            // Eleva a carta visualmente durante o giro
+            c.parentElement.style.zIndex = "100";
             c.classList.add('flipped'); cartas.push({el:c, v:val});
+            
+            gsap.to(c, {rotateY: 180, duration: 0.5, ease: "back.out(1.5)"});
             
             if(cartas.length === 2) {
                 travado = true; const [c1, c2] = cartas;
@@ -476,7 +486,10 @@
                 } else {
                     combo=0; 
                     setTimeout(()=>{
-                        gsap.to([c1.el, c2.el], {rotateY: 0, duration: 0.3}); // Desvira visualmente
+                        gsap.to([c1.el, c2.el], {
+                            rotateY: 0, duration: 0.4, ease: "power2.inOut",
+                            onComplete: () => { c1.el.parentElement.style.zIndex = ""; c2.el.parentElement.style.zIndex = ""; }
+                        });
                         c1.el.classList.remove('flipped'); c2.el.classList.remove('flipped'); cartas=[]; travado=false;
                     }, 1000);
                 }
@@ -505,20 +518,22 @@
         // Intervalo de Caos ajustado para 45s - 90s para não frustrar o jogador
         function scheduleNextChaos() { clearTimeout(chaosTimer); const time = Math.random()*(90000-45000)+45000; chaosTimer = setTimeout(() => { triggerChaosShuffle(); scheduleNextChaos(); }, time); }
         function triggerChaosShuffle() {
-            const valid = Array.from(document.querySelectorAll('.card:not(.flipped):not(.matched)')); if(valid.length<2)return;
-            game.chaosActive = true; playS('chaos'); notificar("Caos! Embaralhando...");
-            valid.forEach(c => c.classList.add('chaos-glow'));
+            const validCards = Array.from(document.querySelectorAll('.card:not(.flipped):not(.matched)')); 
+            if(validCards.length<2) return;
             
-            // ANIMAÇÃO VORTEX/ESPIRAL
-            gsap.to(valid, { 
+            const wrappers = validCards.map(c => c.parentElement);
+            game.chaosActive = true; playS('chaos'); notificar("Caos! Embaralhando...");
+            validCards.forEach(c => c.classList.add('chaos-glow'));
+            
+            gsap.to(wrappers, { 
                 duration: 1, scale: 0.5, rotation: 360, 
                 x: (i) => Math.cos(i) * 100, y: (i) => Math.sin(i) * 100, // Espiral simples
                 opacity: 0.8, ease: "power2.inOut", 
                 onComplete: () => {
-                    const icons = valid.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
-                    valid.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerText = icons[i]; });
-                    // CRÍTICO: clearProps devolve o controle para o CSS e remove o travamento
-                    gsap.to(valid, { duration: 0.5, scale: 1, rotation: 0, x: 0, y: 0, opacity: 1, ease: "back.out(1.7)", clearProps:"all", onComplete: () => { valid.forEach(c => c.classList.remove('chaos-glow')); game.chaosActive = false; } });
+                    const icons = validCards.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
+                    validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerText = icons[i]; });
+                    
+                    gsap.to(wrappers, { duration: 0.5, scale: 1, rotation: 0, x: 0, y: 0, opacity: 1, ease: "back.out(1.7)", clearProps:"all", onComplete: () => { validCards.forEach(c => c.classList.remove('chaos-glow')); game.chaosActive = false; } });
                 }
             });
         }
