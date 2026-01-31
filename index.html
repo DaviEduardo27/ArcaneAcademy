@@ -36,12 +36,18 @@
         #fx-overlay, #fade-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8000; opacity: 0; }
         #fade-layer { background: #000; z-index: 10000; transition: opacity 0.8s; }
         .fade-active { opacity: 1 !important; pointer-events: all !important; }
+        .levelup-shockwave { position: absolute; border: 3px solid var(--accent-gold); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 30px var(--accent-gold), inset 0 0 20px var(--accent-gold); opacity: 0; }
         #time-warning-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9000; opacity: 0; transition: opacity 0.5s; box-shadow: inset 0 0 0 rgba(255,0,0,0); }
         #time-warning-layer.active { opacity: 1; animation: timePulse 1s infinite ease-in-out; }
         @keyframes timePulse { 0% { box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.3); } 50% { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8); } 100% { box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.3); } }
         
         #portal-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 15000; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #portal-canvas.active { opacity: 1; }
+        
+        /* Combo Breaker Crack */
+        #crack-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9500; pointer-events: none; opacity: 0; display: flex; align-items: center; justify-content: center; mix-blend-mode: overlay; }
+        #crack-svg { width: 80%; height: 80%; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
+        .crack-path { fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
         
         /* Chromatic Aberration Class */
         .chromatic-active { animation: chromaticShake 0.2s infinite; filter: url(#chromatic-aberration); }
@@ -125,6 +131,7 @@
         .boss-hp-bg { width: 100%; height: 18px; background: #0a0a0a; margin-top: 20px; border-radius: 10px; border: 2px solid var(--accent-gold); box-shadow: 0 0 20px rgba(0,0,0,0.8); position: relative; overflow: hidden; }
         .boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #8b0000, #e74c3c); transition: 0.3s; box-shadow: 0 0 15px #e74c3c; position: relative; }
         .boss-hp-fill::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%; background: rgba(255,255,255,0.2); border-radius: 10px 10px 0 0; }
+        .boss-blood { position: absolute; width: 6px; height: 6px; background: #8b0000; border-radius: 50%; pointer-events: none; z-index: 20; box-shadow: 0 0 5px #ff0000; }
         .boss-speech-bubble { position: absolute; top: -120px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 20px 25px; border-radius: 8px; font-family: 'MedievalSharp'; font-size: 1.1rem; width: 280px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); opacity: 0; pointer-events:none; transition: opacity 0.5s; border: 3px solid #000; }
         @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
         
@@ -246,6 +253,11 @@
     <div id="time-warning-layer"></div>
     <div id="fade-layer"></div>
     <canvas id="portal-canvas"></canvas>
+    
+    <div id="crack-fx">
+        <svg id="crack-svg" viewBox="0 0 500 500"><path class="crack-path" d="M250 250 L300 150 L320 100 M250 250 L150 200 L100 180 M250 250 L200 350 L180 400 M250 250 L350 300 L400 320 M250 250 L280 220 L350 200 M250 250 L220 280 L150 300"></path></svg>
+    </div>
+
     <div id="combo-container"></div>
     <div class="notification-bar" id="notif-bar">Mensagem</div>
     <div style="display:none;" id="motes"></div>
@@ -436,7 +448,7 @@
         let game = { fase: 1, score: 0, infiniteMode: false, chaosActive: false };
         
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
-        let afkTimer, lastMatch = 0, currentBookPage = 0;
+        let afkTimer, lastMatch = 0, currentBookPage = 0, bleedInterval = null;
 
         // --- 4. INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -478,6 +490,7 @@
             
             let n=16; if(f>=3) n=20; if(f>=6) n=24; 
             const p=n/2; hpMax=p; hp=p; updateHP(); total=p; pares=0; cartas=[]; travado=false; combo=0;
+            clearInterval(bleedInterval); // Limpa sangramento anterior
             
             const gridClass = (n===20)?'grid-5':'grid-4'; 
             const rewards = getRewards(prof.lvl);
@@ -512,12 +525,18 @@
                 if(c1.v === c2.v) {
                     playS('match'); c1.el.classList.add('matched'); c2.el.classList.add('matched'); pares++; hp--; updateHP(); 
                     const now = Date.now(); if(now-lastMatch < 3000) { combo++; showCombo(combo); } else { combo=1; } lastMatch = now;
+                    
+                    // Boss Shake & Flash FX
+                    gsap.fromTo(".boss-hp-bg", {x:-5}, {x:5, duration:0.05, repeat:5, yoyo:true, clearProps:"x"});
+                    gsap.fromTo("#hp-bar", {filter:"brightness(2)"}, {filter:"brightness(1)", duration:0.3, clearProps:"filter"});
+
                     let pts = Math.floor(100*combo); game.score+=pts; document.getElementById('ui-score').innerText=game.score; showFloatScore(c1.el, pts);
                     if(cfg.part) createMagicBurst(c1.el.getBoundingClientRect().left, c1.el.getBoundingClientRect().top);
                     cartas=[]; travado=false;
                     if(pares === total) { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(tauntTimer); setTimeout(() => { playS('win'); finishStage(); }, 1000); }
                 } else {
                     combo=0; 
+                    if(game.score > 0 && (Date.now() - lastMatch < 5000)) triggerComboBreaker(); // Se errou rápido ou tinha combo
                     setTimeout(()=>{
                         gsap.to([c1.el, c2.el], {
                             rotateY: 0, duration: 0.4, ease: "power2.inOut",
@@ -532,8 +551,9 @@
         function finishStage() {
             const xpGained = 100 + (game.score/10); prof.xp += xpGained;
             let msg = `Vitória! +${Math.floor(xpGained)} XP.`;
-            if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; msg = `LEVEL UP! Nível ${prof.lvl}!`; checkAchievements('levelup'); }
+            if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; msg = `LEVEL UP! Nível ${prof.lvl}!`; checkAchievements('levelup'); triggerLevelUpFX(); }
             localStorage.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
+            clearInterval(bleedInterval);
             
             notificar(msg);
             playS('win');
@@ -553,7 +573,17 @@
                 if(tempo<=0){ clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); quiz("Tempo Esgotado!"); }
             },1000); 
         }
-        function updateHP() { document.getElementById('hp-bar').style.width = ((hp/hpMax)*100)+'%'; }
+        function updateHP() { 
+            const pct = hp/hpMax;
+            document.getElementById('hp-bar').style.width = (pct*100)+'%'; 
+            
+            // Sistema de Sangramento (Low HP)
+            if(pct <= 0.3 && pct > 0) {
+                if(!bleedInterval) bleedInterval = setInterval(spawnBossBleed, 200);
+            } else {
+                clearInterval(bleedInterval); bleedInterval = null;
+            }
+        }
         
         // Intervalo de Caos ajustado para 45s - 90s para não frustrar o jogador
         function scheduleNextChaos() { clearTimeout(chaosTimer); const time = Math.random()*(90000-45000)+45000; chaosTimer = setTimeout(() => { triggerChaosShuffle(); scheduleNextChaos(); }, time); }
@@ -605,7 +635,7 @@
         function checkSave(){const s=localStorage.getItem('aa_save');const b=document.getElementById('btn-continue');if(s)b.classList.remove('disabled');else b.classList.add('disabled');}
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
-        function sairParaMenu() { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
+        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
         function abrirPerfilMenu(){navegar('screen-profile');if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}}
@@ -637,6 +667,47 @@
                 ctx.fillStyle=`rgba(0,210,255,${this.o})`; ctx.beginPath();
                 ctx.arc(this.x,this.y,this.s,0,Math.PI*2); ctx.fill();
             }
+        }
+
+        function triggerLevelUpFX() {
+            const av = document.getElementById('hud-avatar-container');
+            const rect = av.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
+
+            // 1. Onda de Choque
+            const wave = document.createElement('div'); wave.className = 'levelup-shockwave';
+            wave.style.left = cx + 'px'; wave.style.top = cy + 'px'; wave.style.width = '0px'; wave.style.height = '0px';
+            document.body.appendChild(wave);
+            gsap.to(wave, { width: 400, height: 400, x: -200, y: -200, opacity: 1, duration: 0.1, onComplete: () => { gsap.to(wave, { opacity: 0, duration: 0.5, onComplete: ()=>wave.remove() }); } });
+
+            // 2. Explosão de Partículas
+            for(let i=0; i<40; i++) {
+                const p = document.createElement('div'); p.className = 'magic-spark'; p.style.left = cx + 'px'; p.style.top = cy + 'px';
+                p.style.backgroundColor = ['#ffd700', '#fff', '#00a8cc', '#ff4500'][Math.floor(Math.random()*4)]; document.body.appendChild(p);
+                const angle = Math.random() * Math.PI * 2; const dist = Math.random() * 150 + 50;
+                gsap.to(p, { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, opacity: 0, scale: 0, duration: 1 + Math.random(), ease: "power2.out", onComplete: ()=>p.remove() });
+            }
+        }
+        
+        function triggerComboBreaker() {
+            playS('thunder');
+            const crack = document.getElementById('crack-fx');
+            gsap.fromTo(crack, {opacity: 1, scale: 0.8}, {opacity: 0, scale: 1.2, duration: 0.8, ease: "power2.out"});
+            gsap.to(".game-area", {x:"+=15", yoyo:true, repeat:5, duration:0.05, clearProps:"x"});
+            gsap.fromTo("#fx-overlay", {backgroundColor:"#ff0000", opacity:0.3}, {opacity:0, duration:0.5});
+        }
+
+        function spawnBossBleed() {
+            const bar = document.querySelector('.boss-hp-bg');
+            if(!bar) return;
+            const rect = bar.getBoundingClientRect();
+            const p = document.createElement('div'); p.className = 'boss-blood';
+            // Posição aleatória ao longo da barra
+            p.style.left = (rect.left + Math.random() * rect.width) + 'px';
+            p.style.top = (rect.top + rect.height - 5) + 'px';
+            document.body.appendChild(p);
+            gsap.to(p, {y: 50 + Math.random()*50, opacity: 0, scale: 0.5, duration: 1, ease: "power1.in", onComplete: ()=>p.remove()});
         }
 
         function initParticles(){
