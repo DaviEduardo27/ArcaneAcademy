@@ -535,8 +535,8 @@
                     cartas=[]; travado=false;
                     if(pares === total) { clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(tauntTimer); setTimeout(() => { playS('win'); finishStage(); }, 1000); }
                 } else {
+                    if(combo >= 2) triggerComboBreaker(); // Só ativa se realmente quebrar um combo (sequência >= 2)
                     combo=0; 
-                    if(game.score > 0 && (Date.now() - lastMatch < 5000)) triggerComboBreaker(); // Se errou rápido ou tinha combo
                     setTimeout(()=>{
                         gsap.to([c1.el, c2.el], {
                             rotateY: 0, duration: 0.4, ease: "power2.inOut",
