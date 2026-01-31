@@ -223,6 +223,7 @@
         /* Config Panel */
         .avatar-selector { margin: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; } .prof-img-large { width: 160px; height: 160px; max-width: 160px; max-height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(0,0,0,0.8); } .arrow-btn { background: none; border: none; color: #555; font-size: 3.5rem; cursor: pointer; transition: 0.2s; } .arrow-btn:hover { color: var(--accent-gold); } .input-magico { background: transparent; border: none; border-bottom: 1px solid var(--accent-gold); color: #fff; font-size: 1.5rem; padding: 10px; text-align: center; width: 80%; font-family: 'Cinzel'; margin: 20px 0; outline: none; }
         .dash-header { display: flex; align-items: center; gap: 25px; margin-bottom: 25px; justify-content: center; } .dash-avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--accent-gold); background: #000; overflow: hidden; } .dash-avatar img { width: 100%; height: 100%; object-fit: cover; } .dash-info h1 { margin: 0; color: var(--accent-gold); } .dash-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; } .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 2px; border: 1px solid #333; } .stat-label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; } .stat-val-big { font-size: 1.8rem; color: #fff; font-family: 'Cinzel'; } .btn-delete-save { border-color: var(--danger-red); color: var(--danger-red); opacity: 0.6; margin-top: 20px; font-size: 0.8rem; } .btn-delete-save:hover { background: rgba(139, 0, 0, 0.2); border-color: #ff3333; color: #ff3333; opacity: 1; }
+        .dash-header { display: flex; align-items: center; gap: 25px; margin-bottom: 25px; justify-content: center; } .dash-avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--accent-gold); background: #000; overflow: hidden; box-sizing: border-box; } .dash-avatar img { width: 100%; height: 100%; object-fit: cover; } .dash-info h1 { margin: 0; color: var(--accent-gold); } .dash-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; } .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 2px; border: 1px solid #333; } .stat-label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; } .stat-val-big { font-size: 1.8rem; color: #fff; font-family: 'Cinzel'; } .btn-delete-save { border-color: var(--danger-red); color: var(--danger-red); opacity: 0.6; margin-top: 20px; font-size: 0.8rem; } .btn-delete-save:hover { background: rgba(139, 0, 0, 0.2); border-color: #ff3333; color: #ff3333; opacity: 1; }
         .cfg-section { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; } .cfg-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: #aaa; font-family: 'Cinzel'; font-size: 1.1rem; } input[type=range] { width: 50%; accent-color: var(--accent-gold); cursor: pointer; } 
         .btn-gear { position: fixed; bottom: 30px; right: 30px; font-size: 3rem; color: rgba(255,255,255,0.3); cursor: pointer; z-index: 5000; transition: 0.3s; filter: drop-shadow(0 0 5px #000); } .btn-gear:hover { transform: rotate(90deg) scale(1.1); color: var(--accent-gold); opacity: 1; }
 
@@ -356,6 +357,11 @@
             <h2 style="color:var(--accent-gold)">REGISTRO MÁGICO</h2>
             <div id="profile-edit">
                 <div class="avatar-selector"><button class="arrow-btn" onclick="playS('click'); mudarAvatar(-1)">❮</button><img id="prof-av-edit" class="prof-img-large" src=""><button class="arrow-btn" onclick="playS('click'); mudarAvatar(1)">❯</button></div>
+                <div class="frame-selector" style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:20px;">
+                    <button class="arrow-btn" onclick="playS('click'); mudarFrame(-1)" style="font-size:2rem;">❮</button>
+                    <div style="text-align:center; width:200px;"><div id="frame-name" style="font-family:'Cinzel'; color:var(--accent-gold); font-size:1.2rem;">Padrão</div><div id="frame-req" style="font-size:0.8rem; color:#666;">Desbloqueado</div></div>
+                    <button class="arrow-btn" onclick="playS('click'); mudarFrame(1)" style="font-size:2rem;">❯</button>
+                </div>
                 <input type="text" id="prof-name-input" class="input-magico" placeholder="Seu Nome"><br><br>
                 <div class="btn-main" onclick="playS('click'); salvarPerfil()">Salvar</div>
                 <div class="btn-main" style="margin-top:10px; opacity:0.7;" onclick="playS('click'); navegar('screen-menu')">Voltar</div>
@@ -447,6 +453,15 @@
         };
 
         const avatares = [ { file: "mago_aprendiz.png", color: "#3498db" }, { file: "feiticeira_natureza.png", color: "#2ecc71" }, { file: "guerreiro_magico.png", color: "#e74c3c" }, { file: "mago_sabio.png", color: "#9b59b6" }, { file: "feiticeira_lua.png", color: "#00d2ff" } ];
+        const molduras = [
+            { name: "Padrão", req: "Desbloqueado", unlock: p => true, apply: (el, c) => { el.style.border = `4px solid ${c}`; el.style.boxShadow = `0 0 20px ${c}`; } },
+            { name: "Veterano", req: "Nível 10", unlock: p => p.lvl >= 10, apply: (el, c) => { el.style.border = `4px double #cd7f32`; el.style.boxShadow = `0 0 15px #cd7f32`; } },
+            { name: "Elite", req: "Nível 25", unlock: p => p.lvl >= 25, apply: (el, c) => { el.style.border = `4px solid #c0c0c0`; el.style.boxShadow = `0 0 20px #c0c0c0`; } },
+            { name: "Mestre", req: "Nível 50", unlock: p => p.lvl >= 50, apply: (el, c) => { el.style.border = `4px solid #ffd700`; el.style.boxShadow = `0 0 25px #ffd700`; } },
+            { name: "Lenda", req: "Grimório", unlock: p => p.grimoireUnlocked, apply: (el, c) => { el.style.border = `4px double #fff`; el.style.boxShadow = `0 0 30px #fff, inset 0 0 10px #fff`; } },
+            { name: "Vazio", req: "Infinito", unlock: p => p.infiniteUnlocked, apply: (el, c) => { el.style.border = `4px dashed #6c3483`; el.style.boxShadow = `0 0 20px #6c3483`; } }
+        ];
+        
         const titulos = ["Aprendiz", "Novato", "Estudante", "Adepto", "Feiticeiro", "Mago", "Bruxo", "Encantador", "Mestre", "Grão-Mestre", "Arquimago", "Auror", "Lenda", "Semideus", "Divindade Arcana"];
         
         const bosses = [
@@ -563,6 +578,7 @@
         function initProfileData() {
             globalData = JSON.parse(DB.getItem('aa_global')) || { achievements: [], infiniteHighScores: [] };
             prof = JSON.parse(DB.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0, grimoireUnlocked: false, ngPlusUnlocked: false, infiniteUnlocked: false };
+            if(typeof prof.frame === 'undefined') prof.frame = 0;
             if(!globalData.achievements) globalData.achievements = [];
         }
 
@@ -598,7 +614,7 @@
                 if(pData) {
                     const av = avatares[pData.av] || avatares[0];
                     html = `<div class="btn-delete-slot" onclick="event.stopPropagation(); deleteSlot(${i})">✖</div>
-                            <img src="Imagens/Personagens/${av.file}" class="slot-avatar" style="border-color:${av.color}">
+                            <img src="Imagens/Personagens/${av.file}" class="slot-avatar" style="border-color:${av.color}; width:80px; height:80px;">
                             <div class="slot-info"><div class="slot-name">${pData.nome}</div><div>Nível ${pData.lvl}</div></div>`;
                 } else {
                     html = `<div class="slot-avatar" style="background:#111; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#333;">+</div>
@@ -1012,13 +1028,47 @@
         
         function abrirPerfilMenu(){ initSlots(); navegar('screen-slots'); }
         function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;DB.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
+        function salvarPerfil(){
+            const n=document.getElementById('prof-name-input').value; if(n)prof.nome=n;
+            if(!molduras[prof.frame].unlock(prof)) prof.frame = 0; // Reverte se bloqueado
+            DB.setItem('aa_prof',JSON.stringify(prof)); updateProfUI(); abrirPerfilMenu();
+        }
         function editarPerfil(){document.getElementById('profile-dash').style.display='none';document.getElementById('profile-edit').style.display='block';}
         function mudarAvatar(d){prof.av=(prof.av+d+avatares.length)%avatares.length;updateProfUI();}
+        function mudarFrame(d){prof.frame=(prof.frame+d+molduras.length)%molduras.length;updateProfUI();}
+        
         function updateProfUI(){
             const a=avatares[prof.av]; const c=a.color; const glow=`0 0 20px ${c}`;
-            document.getElementById('prof-av-edit').src=`Imagens/Personagens/${a.file}`; document.getElementById('prof-av-edit').style.cssText=`border-color:${c}; box-shadow:${glow}`;
-            document.getElementById('dash-av-img').src=`Imagens/Personagens/${a.file}`; document.querySelector('.dash-avatar').style.cssText=`border-color:${c}; box-shadow:${glow}`;
-            document.getElementById('hud-av-img').src=`Imagens/Personagens/${a.file}`; document.querySelector('#hud-avatar-container .avatar-frame').style.cssText=`border-color:${c}; box-shadow:${glow}`;
+            const m = molduras[prof.frame];
+            const isLocked = !m.unlock(prof);
+
+            // UI do Seletor
+            const fName = document.getElementById('frame-name');
+            const fReq = document.getElementById('frame-req');
+            if(fName) {
+                fName.innerText = m.name; fName.style.color = isLocked ? '#555' : 'var(--accent-gold)';
+                fReq.innerText = isLocked ? `Bloqueado (${m.req})` : m.req; fReq.style.color = isLocked ? '#880000' : '#666';
+            }
+            
+            const pEdit = document.getElementById('prof-av-edit');
+            pEdit.src=`Imagens/Personagens/${a.file}`; 
+            pEdit.style.borderColor = c; pEdit.style.boxShadow = glow;
+            if(isLocked) { pEdit.style.border = "4px solid #333"; pEdit.style.boxShadow = "none"; }
+            else m.apply(pEdit, c);
+            
+            // Para HUD e Dash, usa apenas moldura válida
+            const validM = m.unlock(prof) ? m : molduras[0];
+            
+            document.getElementById('dash-av-img').src=`Imagens/Personagens/${a.file}`; 
+            const dashAv = document.querySelector('.dash-avatar');
+            dashAv.style.borderColor = c; dashAv.style.boxShadow = glow;
+            validM.apply(dashAv, c);
+            
+            document.getElementById('hud-av-img').src=`Imagens/Personagens/${a.file}`; 
+            const hudFrame = document.querySelector('#hud-avatar-container .avatar-frame');
+            hudFrame.style.borderColor = c; hudFrame.style.boxShadow = glow;
+            validM.apply(hudFrame, c);
+            
             document.getElementById('dash-name').innerText=prof.nome; document.getElementById('hud-name').innerText=prof.nome; document.getElementById('dash-lvl').innerText=prof.lvl; document.getElementById('hud-lvl').innerText=prof.lvl; document.getElementById('dash-title').innerText=titulos[Math.min(Math.floor((prof.lvl-1)/5),titulos.length-1)];
         }
         function openConfigMenu(o){lastScreen=o==='game'?'screen-game':'screen-menu';const q=document.getElementById('btn-quit-match'); if(o==='game')q.style.display='block'; else q.style.display='none'; navegar('screen-settings');}
