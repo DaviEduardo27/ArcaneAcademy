@@ -120,10 +120,11 @@
         .boss-panel { width: 350px; text-align: center; position: relative; }
         .boss-img { width: 300px; height: 300px; margin: 0 auto; animation: float 5s infinite ease-in-out; } .boss-img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); }
         
-        #boss-n { font-size: 2.5rem; margin-top: 15px; font-weight: bold; text-shadow: 0 0 20px #000, 0 0 10px #000; letter-spacing: 3px; font-family: 'MedievalSharp'; text-transform: uppercase; }
+        #boss-n { font-size: 2.2rem; margin-top: 15px; font-weight: bold; color: #fff; text-shadow: 0 0 15px var(--accent-gold); letter-spacing: 4px; font-family: 'Cinzel'; text-transform: uppercase; border-bottom: 2px solid var(--accent-gold); padding-bottom: 5px; display: inline-block; }
         
-        .boss-hp-bg { width: 100%; height: 10px; background: #111; margin-top: 20px; border-radius: 5px; border: 1px solid #444; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #d35400, #c0392b); transition: 0.3s; box-shadow: 0 0 10px #c0392b; }
+        .boss-hp-bg { width: 100%; height: 18px; background: #0a0a0a; margin-top: 20px; border-radius: 10px; border: 2px solid var(--accent-gold); box-shadow: 0 0 20px rgba(0,0,0,0.8); position: relative; overflow: hidden; }
+        .boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #8b0000, #e74c3c); transition: 0.3s; box-shadow: 0 0 15px #e74c3c; position: relative; }
+        .boss-hp-fill::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%; background: rgba(255,255,255,0.2); border-radius: 10px 10px 0 0; }
         .boss-speech-bubble { position: absolute; top: -120px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 20px 25px; border-radius: 8px; font-family: 'MedievalSharp'; font-size: 1.1rem; width: 280px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); opacity: 0; pointer-events:none; transition: opacity 0.5s; border: 3px solid #000; }
         @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
         
@@ -181,7 +182,7 @@
         
         /* Combo VFX */
         #combo-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 5000; pointer-events: none; }
-        .combo-text { font-size: 6rem; font-weight: bold; font-family: 'MedievalSharp'; text-shadow: 0 0 40px rgba(0,0,0,1); color: var(--combo-orange); -webkit-text-stroke: 2px #000; }
+        .combo-text { font-size: 5rem; font-weight: 800; font-family: 'Cinzel'; background: linear-gradient(to bottom, #fff 20%, var(--accent-gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 20px var(--accent-gold)); letter-spacing: 5px; z-index: 6000; }
         .float-score { position: absolute; font-family: 'Cinzel'; font-weight: bold; color: var(--accent-gold); text-shadow: 0 0 5px #000; pointer-events: none; z-index: 500; }
 
         /* QUIZ */
@@ -473,7 +474,7 @@
         function carregarFase(f) {
             game.fase = f; UI.hud.fase.innerText = f; UI.hud.score.innerText = game.score; UI.board.innerHTML = '';
             let bIdx = (f-1)%bosses.length; if(game.infiniteMode) bIdx = Math.floor(Math.random()*bosses.length); currentBossIndex = bIdx; const b = bosses[bIdx];
-            document.getElementById('boss-img-tag').src = `Imagens/Monstros/${b.file}`; document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.color = b.color; document.getElementById('dynamic-bg-layer').className = b.env;
+            document.getElementById('boss-img-tag').src = `Imagens/Monstros/${b.file}`; document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.textShadow = "0 0 20px " + b.color; document.getElementById('dynamic-bg-layer').className = b.env;
             
             let n=16; if(f>=3) n=20; if(f>=6) n=24; 
             const p=n/2; hpMax=p; hp=p; updateHP(); total=p; pares=0; cartas=[]; travado=false; combo=0;
@@ -611,7 +612,13 @@
         function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;localStorage.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
         function editarPerfil(){document.getElementById('profile-dash').style.display='none';document.getElementById('profile-edit').style.display='block';}
         function mudarAvatar(d){prof.av=(prof.av+d+avatares.length)%avatares.length;updateProfUI();}
-        function updateProfUI(){const a=avatares[prof.av];document.getElementById('prof-av-edit').src=`Imagens/Personagens/${a.file}`;document.getElementById('dash-av-img').src=`Imagens/Personagens/${a.file}`;document.getElementById('hud-av-img').src=`Imagens/Personagens/${a.file}`;document.getElementById('dash-name').innerText=prof.nome;document.getElementById('hud-name').innerText=prof.nome;document.getElementById('dash-lvl').innerText=prof.lvl;document.getElementById('dash-title').innerText=titulos[Math.min(Math.floor((prof.lvl-1)/5),titulos.length-1)];}
+        function updateProfUI(){
+            const a=avatares[prof.av]; const c=a.color; const glow=`0 0 20px ${c}`;
+            document.getElementById('prof-av-edit').src=`Imagens/Personagens/${a.file}`; document.getElementById('prof-av-edit').style.cssText=`border-color:${c}; box-shadow:${glow}`;
+            document.getElementById('dash-av-img').src=`Imagens/Personagens/${a.file}`; document.querySelector('.dash-avatar').style.cssText=`border-color:${c}; box-shadow:${glow}`;
+            document.getElementById('hud-av-img').src=`Imagens/Personagens/${a.file}`; document.querySelector('#hud-avatar-container .avatar-frame').style.cssText=`border-color:${c}; box-shadow:${glow}`;
+            document.getElementById('dash-name').innerText=prof.nome; document.getElementById('hud-name').innerText=prof.nome; document.getElementById('dash-lvl').innerText=prof.lvl; document.getElementById('hud-lvl').innerText=prof.lvl; document.getElementById('dash-title').innerText=titulos[Math.min(Math.floor((prof.lvl-1)/5),titulos.length-1)];
+        }
         function openConfigMenu(o){lastScreen=o==='game'?'screen-game':'screen-menu';const q=document.getElementById('btn-quit-match'); if(o==='game')q.style.display='block'; else q.style.display='none'; navegar('screen-settings');}
         function voltarConfig(){navegar(lastScreen);}
         function applySettings(){audioManager.updateVolume();document.getElementById('rng-musica').value=cfg.m;document.getElementById('rng-sfx').value=cfg.s;document.getElementById('chk-part').checked=cfg.part;setGfx('part',cfg.part);}
