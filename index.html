@@ -40,6 +40,9 @@
         #time-warning-layer.active { opacity: 1; animation: timePulse 1s infinite ease-in-out; }
         @keyframes timePulse { 0% { box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.3); } 50% { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8); } 100% { box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.3); } }
         
+        #portal-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 15000; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
+        #portal-canvas.active { opacity: 1; }
+        
         /* --- SCREENS --- */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s; z-index: 10; }
         .screen.active { display: flex; opacity: 1; z-index: 50; }
@@ -221,6 +224,7 @@
     <div id="combo-pulse-layer"></div>
     <div id="time-warning-layer"></div>
     <div id="fade-layer"></div>
+    <canvas id="portal-canvas"></canvas>
     <div id="combo-container"></div>
     <div class="notification-bar" id="notif-bar">Mensagem</div>
     <div style="display:none;" id="motes"></div>
@@ -439,11 +443,11 @@
         function continuarJogo() { const s=JSON.parse(localStorage.getItem('aa_save')); if(s){game=s;audioManager.playGame();transitionFase(game.fase);} }
 
         function transitionFase(f) {
-            const fade = document.getElementById('fade-layer'); fade.classList.add('fade-active'); playS('alohomora');
-            setTimeout(() => {
+            playS('alohomora');
+            playPortalEffect(() => {
                 UI.screens.menu.style.display = 'none'; navegar('screen-game'); 
-                try { carregarFase(f); } catch(e) { console.error(e); sairParaMenu(); } finally { setTimeout(()=>fade.classList.remove('fade-active'), 500); }
-            }, 800);
+                try { carregarFase(f); } catch(e) { console.error(e); sairParaMenu(); }
+            });
         }
 
         function carregarFase(f) {
@@ -612,6 +616,58 @@
             let ps=[]; for(let i=0;i<50;i++) ps.push(new Particle(c.width, c.height));
             function ani(){ ctx.clearRect(0,0,c.width,c.height); ps.forEach(p=>{p.update(c.height);p.draw(ctx);}); requestAnimationFrame(ani); }
             ani();
+        }
+        
+        function playPortalEffect(callback) {
+            const cvs = document.getElementById('portal-canvas');
+            const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            cvs.classList.add('active');
+            
+            let radius = 0;
+            const maxRadius = Math.sqrt(cvs.width**2 + cvs.height**2);
+            let rotation = 0;
+            let midCalled = false;
+            
+            function render() {
+                ctx.clearRect(0, 0, cvs.width, cvs.height);
+                const cx = cvs.width / 2; const cy = cvs.height / 2;
+                
+                rotation += 0.15;
+                radius += maxRadius / 30; // Velocidade de expansão
+                
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(rotation);
+                
+                // Gradiente Mágico (Branco -> Azul -> Roxo -> Transparente)
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+                gradient.addColorStop(0, '#fff'); 
+                gradient.addColorStop(0.4, '#00a8cc'); 
+                gradient.addColorStop(0.7, '#6c3483'); 
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill();
+                
+                // Runas/Linhas de Energia girando
+                ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 4;
+                for(let i=0; i<6; i++) { ctx.beginPath(); ctx.arc(0, 0, radius * (0.4 + i*0.1), i, Math.PI + i); ctx.stroke(); }
+                
+                ctx.restore();
+                
+                // Momento de cobertura total (Tela Branca/Cheia)
+                if (radius > maxRadius * 1.2) {
+                    if (!midCalled) {
+                        midCalled = true;
+                        if (callback) callback(); // Troca a cena
+                        cvs.classList.remove('active'); // Fade out via CSS
+                        setTimeout(() => ctx.clearRect(0,0,cvs.width,cvs.height), 500);
+                    }
+                } else {
+                    requestAnimationFrame(render);
+                }
+            }
+            render();
         }
 
         function scheduleTaunt(){clearTimeout(tauntTimer);const t=Math.random()*5000+10000;tauntTimer=setTimeout(()=>{const b=bosses[currentBossIndex];if(b){const p=b.phrases[Math.floor(Math.random()*b.phrases.length)];const bb=document.getElementById('boss-speech');bb.innerText=p;bb.style.opacity=1;bb.style.top="-140px";gsap.fromTo(bb,{y:20},{y:0,duration:0.3});setTimeout(()=>bb.style.opacity=0,4000);}scheduleTaunt();},t);}
