@@ -221,7 +221,7 @@
         .owl-fx { position: absolute; top: -300px; left: 50%; transform: translateX(-50%); font-size: 10rem; z-index: 6000; pointer-events: none; filter: drop-shadow(0 40px 30px rgba(0,0,0,0.6)); opacity: 0; }
         
         /* Config Panel */
-        .avatar-selector { margin: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; } .prof-img-large { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(0,0,0,0.8); } .arrow-btn { background: none; border: none; color: #555; font-size: 3.5rem; cursor: pointer; transition: 0.2s; } .arrow-btn:hover { color: var(--accent-gold); } .input-magico { background: transparent; border: none; border-bottom: 1px solid var(--accent-gold); color: #fff; font-size: 1.5rem; padding: 10px; text-align: center; width: 80%; font-family: 'Cinzel'; margin: 20px 0; outline: none; }
+        .avatar-selector { margin: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; } .prof-img-large { width: 160px; height: 160px; max-width: 160px; max-height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(0,0,0,0.8); } .arrow-btn { background: none; border: none; color: #555; font-size: 3.5rem; cursor: pointer; transition: 0.2s; } .arrow-btn:hover { color: var(--accent-gold); } .input-magico { background: transparent; border: none; border-bottom: 1px solid var(--accent-gold); color: #fff; font-size: 1.5rem; padding: 10px; text-align: center; width: 80%; font-family: 'Cinzel'; margin: 20px 0; outline: none; }
         .dash-header { display: flex; align-items: center; gap: 25px; margin-bottom: 25px; justify-content: center; } .dash-avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--accent-gold); background: #000; overflow: hidden; } .dash-avatar img { width: 100%; height: 100%; object-fit: cover; } .dash-info h1 { margin: 0; color: var(--accent-gold); } .dash-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; } .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 2px; border: 1px solid #333; } .stat-label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; } .stat-val-big { font-size: 1.8rem; color: #fff; font-family: 'Cinzel'; } .btn-delete-save { border-color: var(--danger-red); color: var(--danger-red); opacity: 0.6; margin-top: 20px; font-size: 0.8rem; } .btn-delete-save:hover { background: rgba(139, 0, 0, 0.2); border-color: #ff3333; color: #ff3333; opacity: 1; }
         .cfg-section { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; } .cfg-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: #aaa; font-family: 'Cinzel'; font-size: 1.1rem; } input[type=range] { width: 50%; accent-color: var(--accent-gold); cursor: pointer; } 
         .btn-gear { position: fixed; bottom: 30px; right: 30px; font-size: 3rem; color: rgba(255,255,255,0.3); cursor: pointer; z-index: 5000; transition: 0.3s; filter: drop-shadow(0 0 5px #000); } .btn-gear:hover { transform: rotate(90deg) scale(1.1); color: var(--accent-gold); opacity: 1; }
@@ -327,7 +327,7 @@
                 <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label">Jogar</div></div>
                 <div class="magic-menu-card" id="btn-ngplus" style="display:none; border-color:var(--danger-red);" onclick="playS('click'); iniciarNewGamePlus()"><div class="card-icon" style="color:var(--danger-red);">🔥</div><div class="card-label" style="color:var(--danger-red);">New Game+</div></div>
                 <div class="magic-menu-card" id="btn-infinite" style="display:none; border-color:var(--chaos-purple);" onclick="playS('click'); openInfiniteMenu()"><div class="card-icon" style="color:var(--chaos-purple);">♾️</div><div class="card-label" style="color:var(--chaos-purple);">Infinito</div></div>
-                <div class="magic-menu-card" id="btn-grimoire-menu" style="border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="lock-icon" style="display:none;">🔒</div><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);">Grimório</div></div>
+                <div class="magic-menu-card" id="btn-grimoire-menu" style="display:none; border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="lock-icon" style="display:none;">🔒</div><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);">Grimório</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); abrirPerfilMenu()"><div class="card-icon">🧙‍♂️</div><div class="card-label">Perfil</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); openConfigMenu('menu')"><div class="card-icon">⚙️</div><div class="card-label">Opções</div></div>
             </div>
@@ -995,16 +995,12 @@
             const s=DB.getItem('aa_save'); const b=document.getElementById('btn-continue');
             if(s) b.classList.remove('disabled'); else b.classList.add('disabled');
             
-            // Verifica Grimório e Animação de Cadeado
+            // Verifica Grimório (Só aparece se desbloqueado)
             const g=document.getElementById('btn-grimoire-menu'); 
             if(prof.grimoireUnlocked) {
-                g.classList.remove('locked'); g.querySelector('.lock-icon').style.display='none';
-                if(justUnlockedGrimoire) {
-                    const l = g.querySelector('.lock-icon'); l.style.display='block'; l.classList.add('breaking');
-                    setTimeout(()=>{l.style.display='none'; l.classList.remove('breaking');}, 1500);
-                    justUnlockedGrimoire = false;
-                }
-            } else { g.classList.add('locked'); g.querySelector('.lock-icon').style.display='block'; }
+                g.style.display='flex';
+                if(justUnlockedGrimoire) g.classList.add('glow-gold');
+            } else { g.style.display='none'; g.classList.remove('glow-gold'); }
 
             const ng=document.getElementById('btn-ngplus'); if(prof.ngPlusUnlocked) ng.style.display='flex'; else ng.style.display='none';
             const inf=document.getElementById('btn-infinite'); if(prof.infiniteUnlocked) inf.style.display='flex'; else inf.style.display='none';
@@ -1194,7 +1190,11 @@
         }
         
         function showAch(a){const p=document.getElementById('achievement-popup');document.getElementById('ach-pop-icon').innerText=a.icon;document.getElementById('ach-pop-title').innerText=a.title;document.getElementById('ach-pop-desc').innerText=a.desc;playS('achievement');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),5000);}
-        function abrirGrimorioDireto() { navegar('screen-credits'); currentBookPage = 0; renderBookPage(); }
+        function abrirGrimorioDireto() { 
+            const g = document.getElementById('btn-grimoire-menu'); if(g) g.classList.remove('glow-gold');
+            justUnlockedGrimoire = false;
+            navegar('screen-credits'); currentBookPage = 0; renderBookPage(); 
+        }
         function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
             gsap.to(c, {opacity:0, duration:0.3, onComplete:()=>{
                 if(currentBookPage===0) c.innerHTML=`<div class="grimoire-intro-text">O Grimório Sagrado.</div>`;
