@@ -42,27 +42,28 @@
         .screen.active { display: flex; opacity: 1; z-index: 50; }
 
         /* --- INTRO FIX (FULLSCREEN + VINHETA) --- */
-        #screen-intro { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .intro-container { position: relative; width: 100%; height: 100%; }
+        #screen-intro { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(ellipse at center, #1a2639 0%, #000000 100%); z-index: 20000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .intro-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
         /* Efeito Teto Mágico: Azul profundo nas bordas, transparente no centro */
         .magic-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: radial-gradient(circle at center, transparent 20%, rgba(10, 30, 80, 0.4) 60%, #000 95%); 
+            background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%); 
             pointer-events: none; z-index: 20001; 
-            box-shadow: inset 0 0 200px rgba(0,0,0,1);
         }
         
-        /* Video Fullscreen (Cover) */
+        /* Video Centralizado (Cinema Mode) */
         #intro-video { 
-            width: 100%; height: 100%; 
-            object-fit: cover; /* Garante tela cheia sem pixelar se a fonte for boa */
-            opacity: 0.85; 
+            width: auto; height: auto; 
+            max-width: 85vw; max-height: 85vh;
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(0, 168, 204, 0.3);
+            opacity: 1; 
             z-index: 20000; 
         }
         
-        #start-btn-intro { z-index: 20002; position: absolute; bottom: 15%; left: 50%; transform: translate(-50%, 0); background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(100, 200, 255, 0.5); color: #e0f7ff; padding: 20px 60px; font-family: 'Cinzel'; font-size: 1.8rem; letter-spacing: 5px; text-transform: uppercase; cursor: pointer; transition: all 0.4s ease; backdrop-filter: blur(5px); box-shadow: 0 0 50px rgba(0, 168, 204, 0.4); opacity: 1; text-shadow: 0 0 10px #00a8cc; }
-        #start-btn-intro:hover { background: rgba(0, 50, 100, 0.9); border-color: var(--magic-blue); box-shadow: 0 0 80px var(--magic-blue); color: #fff; transform: translate(-50%, 0) scale(1.05); }
+        #start-btn-intro { z-index: 20002; position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); background: linear-gradient(180deg, rgba(10, 20, 30, 0.95), #000); border: 1px solid rgba(0, 168, 204, 0.5); color: var(--accent-gold); padding: 18px 50px; font-family: 'Cinzel'; font-size: 1.4rem; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); backdrop-filter: blur(5px); box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); opacity: 1; text-shadow: 0 0 10px rgba(197, 160, 40, 0.5); border-radius: 50px; }
+        #start-btn-intro:hover { background: linear-gradient(180deg, rgba(20, 40, 60, 1), #050505); border-color: var(--magic-blue); box-shadow: 0 0 50px rgba(0, 168, 204, 0.6), inset 0 0 20px rgba(0, 168, 204, 0.2); color: #fff; transform: translateX(-50%) scale(1.05) translateY(-5px); text-shadow: 0 0 20px var(--magic-blue); }
         #skip-text { position: absolute; bottom: 30px; right: 40px; z-index: 20002; font-family: 'Cinzel'; color: rgba(255,255,255,0.4); font-size: 0.9rem; letter-spacing: 3px; cursor: pointer; display: none; text-transform: uppercase; }
 
         /* --- MENU --- */
