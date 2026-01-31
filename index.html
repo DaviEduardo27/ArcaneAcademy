@@ -604,12 +604,44 @@
                     html = `<div class="slot-avatar" style="background:#111; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#333;">+</div>
                             <div class="slot-info"><div class="slot-name" style="color:#666;">Novo Jogo</div><div>Slot ${i}</div></div>`;
                 }
-                const div = document.createElement('div'); div.className = 'slot-card'; div.innerHTML = html;
+                const div = document.createElement('div'); div.className = 'slot-card'; div.id = `slot-card-${i}`; div.innerHTML = html;
                 div.onclick = () => loadSlot(i); c.appendChild(div);
             }
+            
+            // Animação de Entrada (Stagger)
+            gsap.fromTo(".slot-card", 
+                { y: 50, opacity: 0, scale: 0.8 }, 
+                { y: 0, opacity: 1, scale: 1, duration: 0.6, stagger: 0.15, ease: "back.out(1.5)", delay: 0.1, clearProps: "transform,opacity,scale" }
+            );
         }
 
-        function deleteSlot(i) { if(confirm(`Apagar Slot ${i}?`)) { localStorage.removeItem(`slot_${i}_aa_prof`); localStorage.removeItem(`slot_${i}_aa_save`); localStorage.removeItem(`slot_${i}_aa_global`); initSlots(); } }
+        function deleteSlot(i) { 
+            if(!confirm(`Apagar Slot ${i}?`)) return;
+            
+            const el = document.getElementById(`slot-card-${i}`);
+            if(el) {
+                playS('chaos'); // Som de destruição
+                
+                // Efeito de Partículas (Desintegração)
+                const rect = el.getBoundingClientRect();
+                for(let j=0; j<40; j++) {
+                    const p = document.createElement('div');
+                    p.style.cssText = `position:fixed; left:${rect.left + Math.random() * rect.width}px; top:${rect.top + Math.random() * rect.height}px; width:${Math.random()*5+2}px; height:${Math.random()*5+2}px; background:#555; border-radius:50%; z-index:30001; pointer-events:none;`;
+                    document.body.appendChild(p);
+                    gsap.to(p, { x: (Math.random()-0.5)*150, y: (Math.random()-0.5)*150, opacity: 0, scale: 0, duration: 0.6 + Math.random()*0.4, ease: "power2.out", onComplete: () => p.remove() });
+                }
+
+                // Animação do Card
+                gsap.to(el, {
+                    scale: 0.9, opacity: 0, filter: "grayscale(1) blur(10px)", duration: 0.5, ease: "power2.in",
+                    onComplete: () => {
+                        localStorage.removeItem(`slot_${i}_aa_prof`); localStorage.removeItem(`slot_${i}_aa_save`); localStorage.removeItem(`slot_${i}_aa_global`); initSlots();
+                    }
+                });
+            } else {
+                localStorage.removeItem(`slot_${i}_aa_prof`); localStorage.removeItem(`slot_${i}_aa_save`); localStorage.removeItem(`slot_${i}_aa_global`); initSlots();
+            }
+        }
 
         function loadSlot(i) {
             playS('click');
@@ -982,7 +1014,7 @@
         function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); document.getElementById('screen-ending-credits').style.display='none'; clearTimeout(chaosTimer); clearTimeout(chaosInternalTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
-        function abrirPerfilMenu(){ initSlots(); document.getElementById('screen-slots').style.display='flex'; }
+        function abrirPerfilMenu(){ initSlots(); navegar('screen-slots'); }
         function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;DB.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
         function editarPerfil(){document.getElementById('profile-dash').style.display='none';document.getElementById('profile-edit').style.display='block';}
         function mudarAvatar(d){prof.av=(prof.av+d+avatares.length)%avatares.length;updateProfUI();}
