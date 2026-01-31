@@ -296,6 +296,17 @@
             </div>
     </div>
 
+    <div id="modal-delete-confirm" class="modal-overlay" style="z-index: 35000;">
+        <div class="magic-alert-box show" style="border-color: var(--danger-red); box-shadow: 0 0 60px rgba(139, 0, 0, 0.5);">
+            <h3 style="color: var(--danger-red); text-shadow: 0 0 10px var(--danger-red);">O VAZIO AGUARDA</h3>
+            <p style="margin: 15px 0; text-align: center; color: #ccc; font-family: 'MedievalSharp';">Deseja banir este Mago para o esquecimento eterno?<br><span style="font-size: 0.9rem; color: #888;">(Todo o progresso será perdido)</span></p>
+            <div style="display: flex; gap: 20px; margin-top: 15px;">
+                <div class="magic-alert-btn" style="border-color: var(--danger-red); color: var(--danger-red);" onclick="executeDeleteSlot()">BANIR</div>
+                <div class="magic-alert-btn" onclick="playS('click'); closeDeleteModal()">CANCELAR</div>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-quiz" class="modal-overlay">
         <div class="newspaper" id="quiz-paper">
             <div class="news-header"><div class="news-title">O Profeta Arcano</div><div class="news-subtitle"><span>EDIÇÃO EXTRA</span><span>ACADEMIA</span><span>URGENTE</span></div></div>
@@ -574,6 +585,7 @@
         let globalData = null;
         let prof = null;
         let justUnlockedGrimoire = false;
+        let pendingDeleteId = null;
 
         function initProfileData() {
             globalData = JSON.parse(DB.getItem('aa_global')) || { achievements: [], infiniteHighScores: [] };
@@ -631,9 +643,19 @@
             );
         }
 
-        function deleteSlot(i) { 
-            if(!confirm(`Apagar Slot ${i}?`)) return;
-            
+        function deleteSlot(i) {
+            pendingDeleteId = i;
+            playS('click');
+            document.getElementById('modal-delete-confirm').style.display = 'flex';
+        }
+
+        function closeDeleteModal() { document.getElementById('modal-delete-confirm').style.display = 'none'; pendingDeleteId = null; }
+
+        function executeDeleteSlot() {
+            const i = pendingDeleteId;
+            closeDeleteModal();
+            if (i === null) return;
+
             const el = document.getElementById(`slot-card-${i}`);
             if(el) {
                 playS('chaos'); // Som de destruição
