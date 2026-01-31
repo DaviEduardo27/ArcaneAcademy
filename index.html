@@ -98,14 +98,14 @@
         .btn-main:hover { background: rgba(197, 160, 40, 0.15); border-color: var(--accent-gold); box-shadow: 0 0 25px rgba(197, 160, 40, 0.3); transform: scale(1.02); }
         .btn-main:active { transform: scale(0.98); }
         
-        .hud-top { width: 100%; padding: 30px 50px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 100; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
+        .hud-top { position: absolute; top: 0; left: 0; width: 100%; padding: 30px 50px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 100; pointer-events: none; }
         .profile-card-hud, .stats-card-hud { pointer-events: auto; background: rgba(15, 18, 25, 0.9); padding: 12px 30px; border-radius: 6px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .profile-card-hud { display: flex; align-items: center; gap: 20px; border-left: 4px solid var(--accent-gold); }
         .avatar-frame { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; overflow: hidden; } .avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
         .stats-card-hud { display: flex; gap: 50px; font-family: 'Cinzel'; font-size: 1.3rem; }
         .val-gold { color: var(--accent-gold); font-weight:bold; } .val-blue { color: var(--magic-blue); font-weight:bold; }
         
-        .game-area { display: flex; align-items: center; justify-content: center; gap: 80px; margin-top: 50px; width: 100%; transform-style: preserve-3d; z-index: 10; }
+        .game-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; height: 100%; transform-style: preserve-3d; z-index: 10; }
         .boss-panel { width: 350px; text-align: center; position: relative; }
         .boss-img { width: 300px; height: 300px; margin: 0 auto; animation: float 5s infinite ease-in-out; } .boss-img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); }
         
@@ -464,13 +464,14 @@
                 wrapper.appendChild(c);
                 UI.board.appendChild(wrapper);
             });
-            clearInterval(timer); startTimer(60); 
+            clearInterval(timer); startTimer(50); 
             scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) localStorage.setItem('aa_save', JSON.stringify(game));
         }
 
         function cardClick(c, val) {
             if(travado || game.chaosActive || c.classList.contains('flipped')) return;
             
+            playS('flip');
             // Eleva a carta visualmente durante o giro
             c.parentElement.style.zIndex = "100";
             c.classList.add('flipped'); cartas.push({el:c, v:val});
