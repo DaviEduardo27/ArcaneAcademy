@@ -43,6 +43,11 @@
         #portal-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 15000; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #portal-canvas.active { opacity: 1; }
         
+        /* Chromatic Aberration Class */
+        .chromatic-active { animation: chromaticShake 0.2s infinite; filter: url(#chromatic-aberration); }
+        @keyframes chromaticShake { 0% { transform: translate(1px, 0); } 50% { transform: translate(-1px, 0); } 100% { transform: translate(1px, 0); } }
+        .time-turner-fx { animation: timeRewind 1.5s ease-in-out; } @keyframes timeRewind { 0% { filter: sepia(0); } 50% { filter: sepia(1) hue-rotate(-50deg) blur(2px); } 100% { filter: sepia(0); } }
+        
         /* --- SCREENS --- */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s; z-index: 10; }
         .screen.active { display: flex; opacity: 1; z-index: 50; }
@@ -217,6 +222,21 @@
     </style>
 </head>
 <body>
+    <!-- SVG Filter for Chromatic Aberration -->
+    <svg style="display: none;">
+        <defs>
+            <filter id="chromatic-aberration">
+                <feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" in="SourceGraphic" result="red"/>
+                <feOffset in="red" dx="3" dy="0" result="red_offset"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" in="SourceGraphic" result="green"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" in="SourceGraphic" result="blue"/>
+                <feOffset in="blue" dx="-3" dy="0" result="blue_offset"/>
+                <feBlend mode="screen" in="red_offset" in2="green" result="rg"/>
+                <feBlend mode="screen" in="rg" in2="blue_offset" result="rgb"/>
+            </filter>
+        </defs>
+    </svg>
+
     <div id="dynamic-bg-layer" class="env-default"></div>
     <canvas id="magic-canvas"></canvas>
     <div id="vfx-container"></div>
@@ -443,7 +463,7 @@
         function continuarJogo() { const s=JSON.parse(localStorage.getItem('aa_save')); if(s){game=s;audioManager.playGame();transitionFase(game.fase);} }
 
         function transitionFase(f) {
-            playS('alohomora');
+            playS('teleport');
             playPortalEffect(() => {
                 UI.screens.menu.style.display = 'none'; navegar('screen-game'); 
                 try { carregarFase(f); } catch(e) { console.error(e); sairParaMenu(); }
@@ -515,7 +535,7 @@
             localStorage.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
             
             notificar(msg);
-            playS('win'); playS('alohomora');
+            playS('win');
             
             setTimeout(() => {
                 transitionFase(game.fase+1);
@@ -561,10 +581,12 @@
         function quizSuccess() { 
             document.getElementById('modal-quiz').style.display='none'; 
             notificar("O destino lhe concede mais uma chance!"); 
-            playS('teleport');
+            playS('teleport'); playS('alohomora'); // Som de magia temporal
+            document.body.classList.add('time-turner-fx'); setTimeout(()=>document.body.classList.remove('time-turner-fx'), 1500);
+            
             carregarFase(game.fase); // Reinicia fase e timer (50s)
-            // Efeito Espiral
-            gsap.from(".card-wrapper", { duration: 1, scale: 0, rotation: 720, opacity: 0, stagger: { amount: 0.8, grid: "auto", from: "center" }, ease: "back.out(1.2)" });
+            // Efeito Vira-Tempo (Reconstrução Reversa)
+            gsap.from(".card-wrapper", { duration: 1.5, scale: 0, rotation: -1080, opacity: 0, stagger: { amount: 1, grid: "auto", from: "end" }, ease: "power4.out" });
         }
         function quizFail() { 
             playS('thunder'); 
@@ -623,6 +645,7 @@
             const ctx = cvs.getContext('2d');
             cvs.width = window.innerWidth; cvs.height = window.innerHeight;
             cvs.classList.add('active');
+            document.body.classList.add('chromatic-active'); // Ativa distorção
             
             let radius = 0;
             const maxRadius = Math.sqrt(cvs.width**2 + cvs.height**2);
@@ -634,7 +657,7 @@
                 const cx = cvs.width / 2; const cy = cvs.height / 2;
                 
                 rotation += 0.15;
-                radius += maxRadius / 30; // Velocidade de expansão
+                radius += maxRadius / 60; // Velocidade de expansão (Mais suave/delicado)
                 
                 ctx.save();
                 ctx.translate(cx, cy);
@@ -643,8 +666,8 @@
                 // Gradiente Mágico (Branco -> Azul -> Roxo -> Transparente)
                 const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
                 gradient.addColorStop(0, '#fff'); 
-                gradient.addColorStop(0.4, '#00a8cc'); 
-                gradient.addColorStop(0.7, '#6c3483'); 
+                gradient.addColorStop(0.3, 'rgba(197, 160, 40, 0.8)'); // Ouro (Accent Gold)
+                gradient.addColorStop(0.6, 'rgba(0, 168, 204, 0.4)'); // Magic Blue suave
                 gradient.addColorStop(1, 'transparent');
                 
                 ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill();
@@ -661,6 +684,7 @@
                         midCalled = true;
                         if (callback) callback(); // Troca a cena
                         cvs.classList.remove('active'); // Fade out via CSS
+                        document.body.classList.remove('chromatic-active'); // Remove distorção
                         setTimeout(() => ctx.clearRect(0,0,cvs.width,cvs.height), 500);
                     }
                 } else {
