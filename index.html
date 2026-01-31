@@ -512,7 +512,7 @@
                 wrapper.appendChild(c);
                 UI.board.appendChild(wrapper);
             });
-            clearInterval(timer); startTimer(50); 
+            clearInterval(timer); startTimer(60); 
             scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) localStorage.setItem('aa_save', JSON.stringify(game));
         }
 
@@ -632,7 +632,7 @@
             playS('teleport'); playS('alohomora'); // Som de magia temporal
             document.body.classList.add('time-turner-fx'); setTimeout(()=>document.body.classList.remove('time-turner-fx'), 1500);
             
-            carregarFase(game.fase); // Reinicia fase e timer (50s)
+            carregarFase(game.fase); // Reinicia fase e timer (60s)
             // Efeito Vira-Tempo (Reconstrução Reversa)
             gsap.from(".card-wrapper", { duration: 1.5, scale: 0, rotation: -1080, opacity: 0, stagger: { amount: 1, grid: "auto", from: "end" }, ease: "power4.out" });
         }
