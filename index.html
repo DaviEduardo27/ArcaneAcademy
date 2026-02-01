@@ -577,7 +577,7 @@
         ];
 
         // --- 2. GERENCIAMENTO DE ÁUDIO ---
-        const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3'), teleport:new Audio('Sons/teleport.mp3') };
+        const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3'), teleport:new Audio('Sons/teleport.mp3'), bookOpen:new Audio('Sons/paper.mp3') };
         class AudioManager { 
             constructor(){this.bgMusic=null;this.gameMusic=null;}
             init(){this.bgMusic=document.getElementById('ost-menu');this.gameMusic=document.getElementById('ost-game');this.bgMusic.volume=0.2;this.gameMusic.volume=0.2;}
@@ -603,8 +603,11 @@
 
         function initProfileData() {
             globalData = JSON.parse(DB.getItem('aa_global')) || { achievements: [], infiniteHighScores: [] };
-            prof = JSON.parse(DB.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0, grimoireUnlocked: false, ngPlusUnlocked: false, infiniteUnlocked: false };
+            prof = JSON.parse(DB.getItem('aa_prof')) || { nome: "Aprendiz", av: 0, lvl: 1, xp: 0, maxScore: 0, totalGames: 0, quizStreak: 0, grimoireUnlocked: false, ngPlusUnlocked: false, infiniteUnlocked: false, wins: 0, bossKills: {}, playTime: 0 };
             if(typeof prof.frame === 'undefined') prof.frame = 0;
+            if(typeof prof.wins === 'undefined') prof.wins = 0;
+            if(typeof prof.bossKills === 'undefined') prof.bossKills = {};
+            if(typeof prof.playTime === 'undefined') prof.playTime = 0;
             if(!globalData.achievements) globalData.achievements = [];
         }
 
@@ -823,6 +826,8 @@
             let msg = `Vitória! +${Math.floor(xpGained)} XP.`;
             if(game.score > prof.maxScore) prof.maxScore = game.score;
             
+            const bName = bosses[currentBossIndex].n; prof.bossKills[bName] = (prof.bossKills[bName] || 0) + 1;
+            
             // Limpeza de intervalos (Sangramento, etc)
             clearInterval(bleedInterval);
 
@@ -849,6 +854,7 @@
 
         function completeGame() {
             playS('win');
+            prof.wins = (prof.wins || 0) + 1;
             
             // Desbloqueia Grimório
             if(!prof.grimoireUnlocked) {
@@ -866,36 +872,36 @@
             DB.removeItem('aa_save');
             checkSave();
 
-            // Apresenta a tela final (Grimório)
-            setTimeout(() => { 
-                document.getElementById('screen-game').style.display = 'none'; // Remove a tela congelada
-                document.getElementById('dynamic-bg-layer').className = 'env-default'; // Reseta o fundo bugado
-                playEndingCredits(); 
-            }, 2000);
-        }
+            // Transição para o Grimório (Tela Final)
+            const gameScreen = document.getElementById('screen-game');
+            const bgLayer = document.getElementById('dynamic-bg-layer');
 
-        function playEndingCredits() {
-            const c = document.getElementById('credits-scroll-area');
-            
-            // Reset de Animação (Importante para replays)
-            c.style.animation = 'none';
-            c.offsetHeight; /* trigger reflow */
-            c.style.animation = 'creditsScroll 40s linear forwards';
-
-            let h = `<div class="credit-section"><div class="credit-header">Arcane Academy</div><div class="credit-role">Desenvolvimento & Design</div><div class="credit-name">Davi Eduardo (Kyter)</div></div>`;
-            
-            h += `<div class="credit-section"><div class="credit-header">Lendas Enfrentadas</div><div class="credit-grid">`;
-            bosses.forEach(b => { h += `<div class="credit-card"><img src="Imagens/Monstros/${b.file}"><div><div style="color:${b.color}; font-weight:bold;">${b.n}</div><div style="font-size:0.8rem; color:#aaa;">${b.title}</div></div></div>`; });
-            h += `</div></div>`;
-
-            h += `<div class="credit-section"><div class="credit-header">Conquistas do Reino</div><div class="credit-grid">`;
-            achievementsDB.forEach(a => { h += `<div class="credit-card"><div style="font-size:1.5rem;">${a.icon}</div><div><div style="color:#fff; font-weight:bold;">${a.title}</div><div style="font-size:0.8rem; color:#aaa;">${a.desc}</div></div></div>`; });
-            h += `</div></div>`;
-
-            h += `<div class="credit-section"><div class="credit-header">Obrigado por Jogar</div><div class="credit-role">A Magia Continua...</div></div>`;
-
-            c.innerHTML = h;
-            document.getElementById('screen-ending-credits').style.display = 'flex';
+            gsap.to(gameScreen, {
+                opacity: 0,
+                duration: 1.5,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    gameScreen.style.display = 'none';
+                    gameScreen.style.opacity = 1; 
+                    
+                    // Reseta o fundo para evitar "fantasmas" dos bosses
+                    bgLayer.className = 'env-default';
+                    
+                    // Abre o Grimório
+                    navegar('screen-credits');
+                    currentBookPage = 0; 
+                    renderBookPage();
+                    
+                    // Animação de Entrada do Livro
+                    gsap.fromTo(".grimoire-container", 
+                        { scale: 0.5, opacity: 0, rotationY: 180 },
+                        { scale: 1, opacity: 1, rotationY: 0, duration: 1.5, ease: "back.out(1.2)" }
+                    );
+                    
+                    if(justUnlockedGrimoire) triggerGrimoireUnlockFX();
+                    playS('bookOpen', 0.8); // Som de abertura com pitch mais grave
+                }
+            });
         }
 
         function openInfiniteMenu() {
@@ -944,6 +950,7 @@
             document.getElementById('time-warning-layer').classList.remove('active');
             timer=setInterval(()=>{
                 tempo--; UI.hud.tempo.innerText=tempo;
+                prof.playTime = (prof.playTime || 0) + 1;
                 if(tempo<=10) document.getElementById('time-warning-layer').classList.add('active');
                 if(tempo<=0){ clearInterval(timer); document.getElementById('time-warning-layer').classList.remove('active'); quiz("Tempo Esgotado!"); }
             },1000); 
@@ -1043,7 +1050,14 @@
             else { notificar("Expulso da Academia!"); setTimeout(() => sairParaMenu(), 1500); }
         }
 
-        function playS(k){if(sfx[k])sfx[k].cloneNode().play().catch(()=>{});}
+        function playS(k, rate=1){
+            if(sfx[k]){
+                const s = sfx[k].cloneNode();
+                if(k === 'paper' || k === 'bookOpen') s.playbackRate = 0.9 + Math.random() * 0.2; // Variação de pitch para realismo
+                else s.playbackRate = rate;
+                s.play().catch(()=>{});
+            }
+        }
         function notificar(msg){const b=document.getElementById('notif-bar');b.innerText=msg;b.classList.add('show');setTimeout(()=>b.classList.remove('show'),2500);}
         function showCombo(v){
             if(v<2)return;
@@ -1072,7 +1086,7 @@
         }
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
-        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(chaosInternalTimer); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
+        function sairParaMenu() { clearInterval(timer); clearInterval(bleedInterval); document.getElementById('time-warning-layer').classList.remove('active'); clearTimeout(chaosTimer); clearTimeout(chaosInternalTimer); DB.setItem('aa_prof', JSON.stringify(prof)); audioManager.playMenu(); navegar('screen-menu'); checkSave(); document.getElementById('dynamic-bg-layer').className='env-default'; }
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
         function abrirPerfilMenu(){ initSlots(); navegar('screen-slots'); }
@@ -1355,16 +1369,39 @@
                     // PÁGINA DO CRIADOR (NOVA)
                     c.innerHTML = `
                         <div class="grimoire-header" style="border-bottom: 2px solid var(--accent-gold); margin-bottom: 30px;"><h1 class="grimoire-title" style="font-size:3rem;">O Criador</h1></div>
-                        <div style="text-align:center; display:flex; flex-direction:column; align-items:center; height:100%;">
+                        <div style="text-align:center; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:center;">
+                            <div style="width:140px; height:140px; border-radius:50%; border:4px double var(--accent-gold); overflow:hidden; margin-bottom:20px; box-shadow:0 0 20px rgba(0,0,0,0.4); background:#000;">
+                                <img src="Imagens/Personagens/mago_sabio.png" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
                             <div style="font-family:'Cinzel'; font-size:1.8rem; color:#8b0000; margin-bottom:10px; font-weight:bold;">Davi Eduardo (Kyter)</div>
                             <div style="font-family:'Cinzel'; font-size:1rem; color:#555; margin-bottom:30px; text-transform:uppercase; letter-spacing:2px;">Desenvolvedor & Game Designer</div>
-                            <p id="type-target" style="font-family:'MedievalSharp'; font-size:1.3rem; color:#2c1e0b; line-height:1.8; max-width:80%; font-style:italic;"></p>
+                            <p id="type-target" style="font-family:'MedievalSharp'; font-size:1.3rem; color:#2c1e0b; line-height:1.8; max-width:85%; font-style:italic;"></p>
                         </div>
                     `;
-                    textToType = "Obrigado por jogar Arcane Academy. Este mundo foi criado com paixão para desafiar sua mente e encantar seus olhos. A magia continua..."; 
+                    textToType = "Este jogo foi desenvolvido e criado por mim com muita dedicação. Obrigado por completar esta jornada e desvendar os segredos da Arcane Academy."; 
                     targetId = "type-target";
                 }
-                else if(currentBookPage===12) { 
+                else if(currentBookPage===12) {
+                    // ESTATÍSTICAS (NOVA PÁGINA)
+                    let favBoss = "Nenhum"; let maxKills = 0;
+                    for(let b in prof.bossKills) { if(prof.bossKills[b] > maxKills) { maxKills = prof.bossKills[b]; favBoss = b; } }
+                    
+                    const hours = Math.floor(prof.playTime / 3600);
+                    const mins = Math.floor((prof.playTime % 3600) / 60);
+                    const timeStr = `${hours}h ${mins}m`;
+
+                    c.innerHTML = `
+                        <div class="grimoire-header"><h1 class="grimoire-title">Estatísticas</h1><div class="grimoire-subtitle">Seus Feitos</div></div>
+                        <div style="display:flex; flex-direction:column; gap:30px; width:100%; padding:20px;">
+                            <div class="stat-box" style="background:rgba(93, 64, 55, 0.1); border-color:#5d4037;"><div class="stat-label" style="color:#5d4037;">Vitórias Totais</div><div class="stat-val-big" style="color:#2c1e0b;">${prof.wins}</div></div>
+                            <div class="stat-box" style="background:rgba(93, 64, 55, 0.1); border-color:#5d4037;"><div class="stat-label" style="color:#5d4037;">Inimigo Favorito</div><div class="stat-val-big" style="color:#8b0000; font-size:1.5rem;">${favBoss} <span style="font-size:1rem; color:#555;">(${maxKills}x)</span></div></div>
+                            <div class="stat-box" style="background:rgba(93, 64, 55, 0.1); border-color:#5d4037;"><div class="stat-label" style="color:#5d4037;">Tempo de Jogo</div><div class="stat-val-big" style="color:#2c1e0b;">${timeStr}</div></div>
+                            <div class="stat-box" style="background:rgba(93, 64, 55, 0.1); border-color:#5d4037;"><div class="stat-label" style="color:#5d4037;">Maior Combo</div><div class="stat-val-big" style="color:#2c1e0b;">${prof.maxScore} pts</div></div>
+                        </div>
+                    `;
+                    gsap.from(".stat-box", {opacity:0, y:20, stagger:0.1, duration:0.5});
+                }
+                else if(currentBookPage===13) { 
                     let h='<div class="ach-list">'; 
                     achievementsDB.forEach(a=>{ 
                         h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; 
@@ -1372,7 +1409,7 @@
                     c.innerHTML=h+'</div>'; 
                     gsap.from(".ach-item", {opacity:0, x:-20, stagger:0.05, duration:0.3, delay:0.2});
                 }
-                else if(currentBookPage===13) { 
+                else if(currentBookPage===14) { 
                     let h='<div class="ach-list" style="padding-top:0;"><div class="grimoire-header" style="border:none; margin-bottom:10px;"><h2 class="grimoire-title" style="font-size:2.5rem;">Arquivos Perdidos</h2></div>'; loreEntries.forEach(l=>{ h+=`<div class="ach-item unlocked" style="flex-direction:column; align-items:flex-start; gap:5px; padding:15px;"><h4 style="color:#8b0000; font-size:1.2rem; margin:0;">${l.title}</h4><p style="font-style:italic; margin:0; font-size:1rem; color:#2c1e0b;">${l.text}</p></div>`; }); c.innerHTML=h+'</div>'; 
                     gsap.from(".ach-item", {opacity:0, x:-20, stagger:0.1, duration:0.4, delay:0.2});
                 }
@@ -1396,43 +1433,44 @@
             }
         }
 
-        function nextPage(){if(currentBookPage<13){currentBookPage++;renderBookPage(1);}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage(-1);}}
+        function nextPage(){if(currentBookPage<14){currentBookPage++;renderBookPage(1);}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage(-1);}}
         function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
         function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
         function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
-    </script>
-</body>
-            let h='<div class="ach-list">'; achievementsDB.forEach(a=>{ h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; }); c.innerHTML=h+'</div>'; 
-                    gsap.from(".ach-item", {opacity:0, x:-20, stagger:0.05, duration:0.3, delay:0.2});
-                }
-                else if(currentBookPage===12) { 
-                    let h='<div class="ach-list" style="padding-top:0;"><div class="grimoire-header" style="border:none; margin-bottom:10px;"><h2 class="grimoire-title" style="font-size:2.5rem;">Arquivos Perdidos</h2></div>'; loreEntries.forEach(l=>{ h+=`<div class="ach-item unlocked" style="flex-direction:column; align-items:flex-start; gap:5px; padding:15px;"><h4 style="color:#8b0000; font-size:1.2rem; margin:0;">${l.title}</h4><p style="font-style:italic; margin:0; font-size:1rem; color:#2c1e0b;">${l.text}</p></div>`; }); c.innerHTML=h+'</div>'; 
-                    gsap.from(".ach-item", {opacity:0, x:-20, stagger:0.1, duration:0.4, delay:0.2});
-                }
+        
+        function triggerGrimoireUnlockFX() {
+            const container = document.getElementById('vfx-container');
+            const rect = document.querySelector('.grimoire-container').getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
+            
+            // Partículas Douradas
+            for(let i=0; i<60; i++) {
+                const p = document.createElement('div');
+                p.style.cssText = `position:fixed; left:${cx}px; top:${cy}px; width:${Math.random()*6+2}px; height:${Math.random()*6+2}px; background:radial-gradient(circle, #ffd700, #b8860b); border-radius:50%; z-index:20000; pointer-events:none; box-shadow:0 0 10px #ffd700;`;
+                container.appendChild(p);
                 
-                pNum.innerText=currentBookPage+1; 
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 100 + Math.random() * 300;
                 
-                if(dir===1) gsap.fromTo(c,{rotationY:90,x:50,opacity:0},{rotationY:0,x:0,opacity:1,duration:0.5,ease:"back.out(1.2)"});
-                else if(dir===-1) gsap.fromTo(c,{rotationY:-90,x:-50,opacity:0},{rotationY:0,x:0,opacity:1,duration:0.5,ease:"back.out(1.2)"});
-                else gsap.to(c,{opacity:1,duration:0.3});
-
-                if(textToType && targetId) setTimeout(() => typeWriterEffect(document.getElementById(targetId), textToType), 200);
-            }});
-        }
-
-        function typeWriterEffect(el, text, i = 0) {
-            if (!el) return;
-            if (i === 0) el.textContent = "";
-            el.textContent = text.substring(0, i + 1);
-            if (i < text.length - 1) {
-                typewriterTimer = setTimeout(() => typeWriterEffect(el, text, i + 1), 15 + Math.random() * 15);
+                gsap.to(p, {
+                    x: Math.cos(angle) * dist,
+                    y: Math.sin(angle) * dist,
+                    opacity: 0,
+                    scale: 0,
+                    duration: 1.5 + Math.random(),
+                    ease: "power2.out",
+                    onComplete: () => p.remove()
+                });
             }
+            
+            // Flash de Luz
+            const flash = document.createElement('div');
+            flash.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; opacity:0.8; z-index:19999; pointer-events:none; mix-blend-mode:overlay;";
+            document.body.appendChild(flash);
+            gsap.to(flash, {opacity:0, duration:1, onComplete:()=>flash.remove()});
         }
-
-        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage(1);}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage(-1);}}
-        function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
-        function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
-        function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
+    
     </script>
 </body>
 </html>
