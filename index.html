@@ -828,6 +828,7 @@
                     } else {
                         if(missCombo >= 3) { triggerBossReaction('miss'); missCombo = 0; }
                     }
+                    if(missCombo >= 3) { triggerBossReaction('miss'); missCombo = 0; }
 
                     UI.board.classList.remove('fury-active');
                     setTimeout(()=>{
@@ -889,12 +890,23 @@
             DB.removeItem('aa_save');
             checkSave();
 
-            // Apresenta a tela final (Grimório)
-            setTimeout(() => { 
-                document.getElementById('screen-game').style.display = 'none'; // Remove a tela congelada
-                document.getElementById('dynamic-bg-layer').className = 'env-default'; // Reseta o fundo bugado
-                playEndingCredits(); 
-            }, 2000);
+            // Transição Profissional com GSAP (Fade Out Game -> Fade In Credits)
+            const fade = document.getElementById('fade-layer');
+            fade.style.zIndex = 50000; // Garante prioridade máxima
+            
+            gsap.to(fade, { opacity: 1, duration: 1.5, onComplete: () => {
+                // Limpeza total da cena anterior
+                document.getElementById('screen-game').style.display = 'none';
+                document.getElementById('dynamic-bg-layer').className = 'env-default';
+                
+                // Inicia Créditos
+                playEndingCredits();
+                
+                // Revela Créditos
+                gsap.to(fade, { opacity: 0, duration: 1.5, delay: 0.5, onComplete: () => {
+                    fade.style.zIndex = ''; // Restaura z-index
+                }});
+            }});
         }
 
         function playEndingCredits() {
@@ -918,7 +930,14 @@
             h += `<div class="credit-section"><div class="credit-header">Obrigado por Jogar</div><div class="credit-role">A Magia Continua...</div></div>`;
 
             c.innerHTML = h;
-            document.getElementById('screen-ending-credits').style.display = 'flex';
+            
+            // Animação de Scroll via GSAP (Mais suave e sem bugs de CSS)
+            gsap.to(c, {
+                top: "-250%", // Sobe até sumir
+                duration: 45,
+                ease: "none",
+                overwrite: true
+            });
         }
 
         function openInfiniteMenu() {
