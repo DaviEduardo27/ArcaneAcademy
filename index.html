@@ -201,10 +201,6 @@
         .card-grid.fury-active .card .front { border-color: #ff4500; box-shadow: 0 0 20px #ff4500, inset 0 0 10px #ff8c00; animation: furyBurn 0.5s infinite alternate; }
         .card-grid.fury-active .card .back { border-color: #ff4500; box-shadow: 0 0 20px #ff4500; }
         @keyframes furyBurn { 0% { box-shadow: 0 0 15px #ff4500; } 100% { box-shadow: 0 0 40px #ff4500, 0 0 20px #ffff00; filter: brightness(1.3); } }
-        
-        /* HINT GLOW */
-        .card.hint-glow .back { border-color: #00ff00; box-shadow: 0 0 40px #00ff00, inset 0 0 20px #00ff00; animation: hintPulse 0.5s infinite alternate; }
-        @keyframes hintPulse { 0% { box-shadow: 0 0 20px #00ff00; } 100% { box-shadow: 0 0 50px #00ff00; filter: brightness(1.5); } }
 
         /* --- NOTIFICAÇÕES & POPUPS --- */
         #magic-alert-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 30000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
@@ -584,15 +580,6 @@
             {id:'infinite_15',icon:'♾️',title:'Eterno',desc:'Fase 15 Infinito.'}, {id:'completionist',icon:'📖',title:'Historiador',desc:'Grimório Completo.'}, {id:'collector',icon:'🃏',title:'Colecionador',desc:'Todas Skins.'}, {id:'fashion',icon:'🧙‍♀️',title:'Estiloso',desc:'Todos Avatares.'}
         ];
 
-        // LORE ENTRIES (Página Extra do Grimório)
-        const loreEntries = [
-            { title: "A Queda de Malakor", text: "Malakor, outrora o diretor mais brilhante da Academia, foi corrompido por sua obsessão com a imortalidade. Ele é a resposta para quem busca o 'Diretor Corrompido'." },
-            { title: "O Guardião Ferrum", text: "Ferrum guarda o Portão Principal. Seu corpo de ferro é imune à dor, mas sua programação antiga o impede de abandonar seu posto." },
-            { title: "Fraqueza das Fadas", text: "Fadas como Glacia detestam o Ferro Frio. Este metal interfere em sua magia natural, sendo tóxico para sua espécie." },
-            { title: "O Grimório", text: "Um Grimório não é apenas um diário, é um Livro Mágico que registra feitiços e criaturas. Ele é a chave para o conhecimento arcano." },
-            { title: "Magia do Caos", text: "A magia roxa que embaralha o destino é conhecida como Magia do Caos. Ela é imprevisível e temida por aqueles que buscam ordem." }
-        ];
-
         // --- 2. GERENCIAMENTO DE ÁUDIO ---
         const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3'), teleport:new Audio('Sons/teleport.mp3') };
         class AudioManager { 
@@ -821,13 +808,6 @@
                     if(combo >= 2) triggerComboBreaker(); // Só ativa se realmente quebrar um combo (sequência >= 2)
                     combo=0; 
                     missCombo++;
-                    
-                    if(game.ngPlus) {
-                        if(missCombo === 3) triggerBossReaction('miss');
-                        if(missCombo >= 5) { showHint(); missCombo = 0; }
-                    } else {
-                        if(missCombo >= 3) { triggerBossReaction('miss'); missCombo = 0; }
-                    }
                     if(missCombo >= 3) { triggerBossReaction('miss'); missCombo = 0; }
 
                     UI.board.classList.remove('fury-active');
@@ -890,23 +870,12 @@
             DB.removeItem('aa_save');
             checkSave();
 
-            // Transição Profissional com GSAP (Fade Out Game -> Fade In Credits)
-            const fade = document.getElementById('fade-layer');
-            fade.style.zIndex = 50000; // Garante prioridade máxima
-            
-            gsap.to(fade, { opacity: 1, duration: 1.5, onComplete: () => {
-                // Limpeza total da cena anterior
-                document.getElementById('screen-game').style.display = 'none';
-                document.getElementById('dynamic-bg-layer').className = 'env-default';
-                
-                // Inicia Créditos
-                playEndingCredits();
-                
-                // Revela Créditos
-                gsap.to(fade, { opacity: 0, duration: 1.5, delay: 0.5, onComplete: () => {
-                    fade.style.zIndex = ''; // Restaura z-index
-                }});
-            }});
+            // Apresenta a tela final (Grimório)
+            setTimeout(() => { 
+                document.getElementById('screen-game').style.display = 'none'; // Remove a tela congelada
+                document.getElementById('dynamic-bg-layer').className = 'env-default'; // Reseta o fundo bugado
+                playEndingCredits(); 
+            }, 2000);
         }
 
         function playEndingCredits() {
@@ -930,14 +899,7 @@
             h += `<div class="credit-section"><div class="credit-header">Obrigado por Jogar</div><div class="credit-role">A Magia Continua...</div></div>`;
 
             c.innerHTML = h;
-            
-            // Animação de Scroll via GSAP (Mais suave e sem bugs de CSS)
-            gsap.to(c, {
-                top: "-250%", // Sobe até sumir
-                duration: 45,
-                ease: "none",
-                overwrite: true
-            });
+            document.getElementById('screen-ending-credits').style.display = 'flex';
         }
 
         function openInfiniteMenu() {
@@ -1319,30 +1281,6 @@
             speechHideTimer = setTimeout(() => bb.style.opacity = 0, 4000);
         }
 
-        function showHint() {
-            const cards = Array.from(document.querySelectorAll('.card:not(.flipped):not(.matched)'));
-            const groups = {};
-            cards.forEach(c => {
-                const i = c.dataset.icon;
-                if(!groups[i]) groups[i] = [];
-                groups[i].push(c);
-            });
-            
-            let pair = null;
-            for(const k in groups) { if(groups[k].length >= 2) { pair = groups[k].slice(0,2); break; } }
-            
-            if(pair) {
-                playS('alohomora'); notificar("O destino revela um caminho...");
-                pair.forEach(c => {
-                    c.classList.add('hint-glow');
-                    gsap.to(c, { scale: 1.1, duration: 0.3, yoyo: true, repeat: 3, onComplete: () => {
-                        c.classList.remove('hint-glow');
-                        gsap.to(c, { scale: 1, duration: 0.2 });
-                    }});
-                });
-            }
-        }
-
         function triggerBossReaction(type) {
             const b = bosses[currentBossIndex];
             if(!b) return;
@@ -1396,102 +1334,28 @@
             justUnlockedGrimoire = false;
             navegar('screen-credits'); currentBookPage = 0; renderBookPage(); 
         }
-        function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
-            gsap.to(c, {opacity:0, duration:0.3, onComplete:()=>{
+        function renderBookPage(dir=0) { 
+            const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
+            if(dir!==0) playS('paper');
+            
+            let out={opacity:0,duration:0.3};
+            if(dir===1) out={rotationY:-90,x:-50,opacity:0,duration:0.3,ease:"power1.in"};
+            if(dir===-1) out={rotationY:90,x:50,opacity:0,duration:0.3,ease:"power1.in"};
+
+            gsap.to(c, {...out, onComplete:()=>{
                 if(currentBookPage===0) c.innerHTML=`<div class="grimoire-intro-text">O Grimório Sagrado.</div>`;
                 else if(currentBookPage<=10) { const b=bosses[currentBookPage-1]; c.innerHTML=`<div class="boss-portrait"><img src="Imagens/Monstros/${b.file}"></div><h2>${b.n}</h2><p>${b.lore}</p>`; }
                 else if(currentBookPage===11) { let h='<div class="ach-list">'; achievementsDB.forEach(a=>{ h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; }); c.innerHTML=h+'</div>'; }
-                else if(currentBookPage===12) { 
-                    let h='<div class="ach-list" style="padding-top:0;">'; 
-                    h+='<div class="grimoire-header" style="border:none; margin-bottom:10px;"><h2 class="grimoire-title" style="font-size:2.5rem;">Arquivos Perdidos</h2></div>';
-                    loreEntries.forEach(l=>{ h+=`<div class="ach-item unlocked" style="flex-direction:column; align-items:flex-start; gap:5px; padding:15px;"><h4 style="color:#8b0000; font-size:1.2rem; margin:0;">${l.title}</h4><p style="font-style:italic; margin:0; font-size:1rem; color:#2c1e0b;">${l.text}</p></div>`; }); 
-                    c.innerHTML=h+'</div>'; 
-                }
-                pNum.innerText=currentBookPage+1; gsap.to(c,{opacity:1,duration:0.3});
-            }});
-        }
-        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage();}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage();}}
-        function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
-        function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
-        function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
-    </script>
-</body>
-</html> }
-        function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
-            gsap.to(c, {opacity:0, duration:0.3, onComplete:()=>{
-                if(currentBookPage===0) c.innerHTML=`<div class="grimoire-intro-text">O Grimório Sagrado.</div>`;
-                else if(currentBookPage<=10) { const b=bosses[currentBookPage-1]; c.innerHTML=`<div class="boss-portrait"><img src="Imagens/Monstros/${b.file}"></div><h2>${b.n}</h2><p>${b.lore}</p>`; }
-                else if(currentBookPage===11) { let h='<div class="ach-list">'; achievementsDB.forEach(a=>{ h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; }); c.innerHTML=h+'</div>'; }
-                pNum.innerText=currentBookPage+1; gsap.to(c,{opacity:1,duration:0.3});
-            }});
-        }
-        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage();}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage();}}
-        function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
-        function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
-        function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
-    </script>
-</body>
-</html>         if(a.id==='score_5k' && prof.maxScore>=5000) u=true;
+                else if(currentBookPage===12) { let h='<div class="ach-list" style="padding-top:0;"><div class="grimoire-header" style="border:none; margin-bottom:10px;"><h2 class="grimoire-title" style="font-size:2.5rem;">Arquivos Perdidos</h2></div>'; loreEntries.forEach(l=>{ h+=`<div class="ach-item unlocked" style="flex-direction:column; align-items:flex-start; gap:5px; padding:15px;"><h4 style="color:#8b0000; font-size:1.2rem; margin:0;">${l.title}</h4><p style="font-style:italic; margin:0; font-size:1rem; color:#2c1e0b;">${l.text}</p></div>`; }); c.innerHTML=h+'</div>'; }
                 
-                if(u){ globalData.achievements.push(a.id); DB.setItem('aa_global',JSON.stringify(globalData)); showAch(a); }
-            });
-        }
-        
-        function showAch(a){const p=document.getElementById('achievement-popup');document.getElementById('ach-pop-icon').innerText=a.icon;document.getElementById('ach-pop-title').innerText=a.title;document.getElementById('ach-pop-desc').innerText=a.desc;playS('achievement');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),5000);}
-        function abrirGrimorioDireto() { 
-            const g = document.getElementById('btn-grimoire-menu'); if(g) g.classList.remove('glow-gold');
-            justUnlockedGrimoire = false;
-            navegar('screen-credits'); currentBookPage = 0; renderBookPage(); 
-        }
-        function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
-            gsap.to(c, {opacity:0, duration:0.3, onComplete:()=>{
-                if(currentBookPage===0) c.innerHTML=`<div class="grimoire-intro-text">O Grimório Sagrado.</div>`;
-                else if(currentBookPage<=10) { const b=bosses[currentBookPage-1]; c.innerHTML=`<div class="boss-portrait"><img src="Imagens/Monstros/${b.file}"></div><h2>${b.n}</h2><p>${b.lore}</p>`; }
-                else if(currentBookPage===11) { let h='<div class="ach-list">'; achievementsDB.forEach(a=>{ h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; }); c.innerHTML=h+'</div>'; }
-                pNum.innerText=currentBookPage+1; gsap.to(c,{opacity:1,duration:0.3});
-            }});
-        }
-        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage();}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage();}}
-        function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
-        function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
-        function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
-    </script>
-</body>
-</html> function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
-            gsap.to(c, {opacity:0, duration:0.3, onComplete:()=>{
-                if(currentBookPage===0) c.innerHTML=`<div class="grimoire-intro-text">O Grimório Sagrado.</div>`;
-                else if(currentBookPage<=10) { const b=bosses[currentBookPage-1]; c.innerHTML=`<div class="boss-portrait"><img src="Imagens/Monstros/${b.file}"></div><h2>${b.n}</h2><p>${b.lore}</p>`; }
-                else if(currentBookPage===11) { let h='<div class="ach-list">'; achievementsDB.forEach(a=>{ h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; }); c.innerHTML=h+'</div>'; }
-                pNum.innerText=currentBookPage+1; gsap.to(c,{opacity:1,duration:0.3});
-            }});
-        }
-        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage();}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage();}}
-        function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
-        function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
-        function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
-    </script>
-</body>
-</html>         if(a.id==='score_5k' && prof.maxScore>=5000) u=true;
+                pNum.innerText=currentBookPage+1; 
                 
-                if(u){ globalData.achievements.push(a.id); DB.setItem('aa_global',JSON.stringify(globalData)); showAch(a); }
-            });
-        }
-        
-        function showAch(a){const p=document.getElementById('achievement-popup');document.getElementById('ach-pop-icon').innerText=a.icon;document.getElementById('ach-pop-title').innerText=a.title;document.getElementById('ach-pop-desc').innerText=a.desc;playS('achievement');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),5000);}
-        function abrirGrimorioDireto() { 
-            const g = document.getElementById('btn-grimoire-menu'); if(g) g.classList.remove('glow-gold');
-            justUnlockedGrimoire = false;
-            navegar('screen-credits'); currentBookPage = 0; renderBookPage(); 
-        }
-        function renderBookPage() { const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
-            gsap.to(c, {opacity:0, duration:0.3, onComplete:()=>{
-                if(currentBookPage===0) c.innerHTML=`<div class="grimoire-intro-text">O Grimório Sagrado.</div>`;
-                else if(currentBookPage<=10) { const b=bosses[currentBookPage-1]; c.innerHTML=`<div class="boss-portrait"><img src="Imagens/Monstros/${b.file}"></div><h2>${b.n}</h2><p>${b.lore}</p>`; }
-                else if(currentBookPage===11) { let h='<div class="ach-list">'; achievementsDB.forEach(a=>{ h+=`<div class="ach-item ${globalData.achievements.includes(a.id)?'unlocked':''}"><div class="ach-item-icon">${a.icon}</div><div><h4>${a.title}</h4><p>${a.desc}</p></div></div>`; }); c.innerHTML=h+'</div>'; }
-                pNum.innerText=currentBookPage+1; gsap.to(c,{opacity:1,duration:0.3});
+                if(dir===1) gsap.fromTo(c,{rotationY:90,x:50,opacity:0},{rotationY:0,x:0,opacity:1,duration:0.5,ease:"back.out(1.2)"});
+                else if(dir===-1) gsap.fromTo(c,{rotationY:-90,x:-50,opacity:0},{rotationY:0,x:0,opacity:1,duration:0.5,ease:"back.out(1.2)"});
+                else gsap.to(c,{opacity:1,duration:0.3});
             }});
         }
-        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage();}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage();}}
+        function nextPage(){if(currentBookPage<12){currentBookPage++;renderBookPage(1);}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage(-1);}}
         function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
         function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
         function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
