@@ -805,18 +805,21 @@
             let msg = `Vitória! +${Math.floor(xpGained)} XP.`;
             if(game.score > prof.maxScore) prof.maxScore = game.score;
             
+            // Limpeza de intervalos (Sangramento, etc)
+            clearInterval(bleedInterval);
+
             // 2° ZERAMENTO DO JOGO (Fase 10 - Gaiaos)
             if(game.fase >= 10 && !game.infiniteMode) {
                 prof.xp += 2000; // Bônus de Zeramento
                 if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; checkAchievements('levelup'); }
                 DB.setItem('aa_prof', JSON.stringify(prof));
+                updateProfUI();
                 completeGame();
                 return;
             }
 
             if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; msg = `LEVEL UP! Nível ${prof.lvl}!`; checkAchievements('levelup'); triggerLevelUpFX(); }
             DB.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
-            clearInterval(bleedInterval);
             
             notificar(msg);
             playS('win');
@@ -855,6 +858,12 @@
 
         function playEndingCredits() {
             const c = document.getElementById('credits-scroll-area');
+            
+            // Reset de Animação (Importante para replays)
+            c.style.animation = 'none';
+            c.offsetHeight; /* trigger reflow */
+            c.style.animation = 'creditsScroll 40s linear forwards';
+
             let h = `<div class="credit-section"><div class="credit-header">Arcane Academy</div><div class="credit-role">Desenvolvimento & Design</div><div class="credit-name">Davi Eduardo (Kyter)</div></div>`;
             
             h += `<div class="credit-section"><div class="credit-header">Lendas Enfrentadas</div><div class="credit-grid">`;
