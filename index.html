@@ -405,13 +405,13 @@
         </div>
     </div>
 
-    <div id="screen-credits" class="screen" style="background:#000; z-index:10000; display:none;">
+    <div id="screen-credits" class="screen" style="background:#000; z-index:20005; display:none;">
         <div class="grimoire-container">
             <div class="grimoire-header"><h1 class="grimoire-title">Grimório das Lendas</h1><div class="grimoire-subtitle">Os Desafios Superados</div></div>
             <div id="book-content" class="grimoire-page"></div>
             <div class="grimoire-nav"><button class="page-btn" id="prev-btn" onclick="prevPage()">❮</button><div class="page-number">Página <span id="page-num">1</span></div><button class="page-btn" id="next-btn" onclick="nextPage()">❯</button></div>
         </div>
-        <div class="grimoire-actions"><div class="btn-main" style="width:200px;" onclick="playS('click'); sairParaMenu()">Menu Principal</div></div>
+        <div class="grimoire-actions"><div class="btn-main" style="width:250px; background:rgba(0,0,0,0.8); border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 20px rgba(197, 160, 40, 0.3);" onclick="playS('click'); sairParaMenu()">Voltar ao Menu</div></div>
     </div>
 
     <div id="modal-infinite" class="modal-overlay">
@@ -574,6 +574,14 @@
             {id:'kill_aurelius',icon:'🐉',title:'Matador',desc:'Derrote Aurelius.'}, {id:'kill_malakor',icon:'☠️',title:'Justiça',desc:'Derrote Malakor.'}, {id:'kill_sertis',icon:'🐍',title:'Antídoto',desc:'Derrote Sertis.'}, {id:'kill_trion',icon:'🦁',title:'Domador',desc:'Derrote Trion.'}, {id:'kill_gaiaos',icon:'🌍',title:'Terra',desc:'Derrote Gaiaos.'},
             {id:'quiz_win',icon:'🧠',title:'Sábio',desc:'Acerte Quiz.'}, {id:'chaos_survivor',icon:'🌀',title:'Ordem',desc:'Vença no Caos.'}, {id:'low_hp',icon:'❤️‍🩹',title:'Fio',desc:'Vença com 1 HP.'}, {id:'speedster',icon:'👟',title:'Ligeiro',desc:'Vença < 25s.'}, {id:'veteran_10',icon:'🎖️',title:'Veterano I',desc:'10 Jogos.'}, {id:'veteran_50',icon:'🏅',title:'Veterano II',desc:'50 Jogos.'},
             {id:'infinite_15',icon:'♾️',title:'Eterno',desc:'Fase 15 Infinito.'}, {id:'completionist',icon:'📖',title:'Historiador',desc:'Grimório Completo.'}, {id:'collector',icon:'🃏',title:'Colecionador',desc:'Todas Skins.'}, {id:'fashion',icon:'🧙‍♀️',title:'Estiloso',desc:'Todos Avatares.'}
+        ];
+
+        const loreEntries = [
+            { title: "A Fundação", text: "A Academia foi erguida sobre o Nexus Primordial. Os fundadores acreditavam que poderiam canalizar o caos para o progresso, mas as cicatrizes na realidade permanecem." },
+            { title: "O Incidente Glacia", text: "Glacia não era hostil. Ela era a guardiã dos jardins de inverno até que um estudante tentou roubar seu coração de gelo eterno para uma poção de amor." },
+            { title: "A Maldição de Ferrum", text: "Ferrum aguarda ordens de um general morto há séculos. Sua armadura não enferruja devido ao sangue de magos que tentaram desativá-lo." },
+            { title: "O Segredo de Malakor", text: "O diretor não buscava poder, mas uma cura. A praga mágica que ele contraiu o obrigou a drenar a vida dos outros para não se tornar um Lich." },
+            { title: "O Vazio", text: "Além das paredes da realidade, o Vazio observa. O modo Infinito não é um teste, é uma invasão. Cada carta virada enfraquece a barreira." }
         ];
 
         // --- 2. GERENCIAMENTO DE ÁUDIO ---
