@@ -117,18 +117,26 @@
         .beta-badge { position: absolute; top: 30px; right: 40px; font-family: 'Cinzel'; font-size: 1.2rem; font-weight: bold; color: rgba(255, 255, 255, 0.8); letter-spacing: 4px; z-index: 100; text-shadow: 0 0 10px rgba(0, 168, 204, 0.8); }
         
         /* Carrossel */
-        .menu-options-container { width: 100%; background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.8) 50%, transparent 100%); padding: 60px 0 80px 0; display: flex; justify-content: center; align-items: flex-end; gap: 40px; perspective: 1500px; min-height: 450px; z-index: 2000; overflow-x: auto; border: none; }
-        .menu-options-container::-webkit-scrollbar { display: none; }
+        .menu-options-container { width: 100%; background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.8) 50%, transparent 100%); padding: 0; display: flex; justify-content: center; align-items: center; gap: 25px; z-index: 2000; min-height: 450px; border: none; position: relative; flex-wrap: wrap; align-content: center; }
         
-        .magic-menu-card { width: 200px; height: 300px; flex-shrink: 0; background: rgba(10, 12, 16, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 25px; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; backdrop-filter: blur(8px); transform-style: preserve-3d; }
+        .magic-menu-card { width: 190px; height: 290px; flex-shrink: 0; background: rgba(10, 12, 16, 0.85); border: 1px solid rgba(197, 160, 40, 0.3); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; backdrop-filter: blur(5px); opacity: 1; pointer-events: auto; transform: translateY(0); animation: cardFloatMenu 4s ease-in-out infinite; text-align: center; }
+        
+        /* Variação na animação para parecer orgânico */
+        .magic-menu-card:nth-child(odd) { animation-duration: 4.5s; animation-delay: 0.5s; }
+        .magic-menu-card:nth-child(even) { animation-duration: 3.8s; animation-delay: 0s; }
+
+        @keyframes cardFloatMenu { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        
         .card-icon { font-size: 4.5rem; color: #aaa; transition: 0.4s; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
-        .card-label { font-family: 'Cinzel'; font-size: 1.1rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 3px; transition: 0.4s; margin-top: 10px; }
+        .card-label { font-family: 'Cinzel'; font-size: 1.1rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 3px; transition: 0.4s; margin-top: 10px; width: 100%; text-align: center; }
         
-        .magic-menu-card:hover { transform: translateY(-30px) scale(1.05); background: rgba(10, 20, 40, 0.95); border-color: var(--magic-blue); box-shadow: 0 0 60px rgba(0, 168, 204, 0.5), inset 0 0 30px rgba(0, 168, 204, 0.2); z-index: 10; }
+        .magic-menu-card:hover { transform: translateY(-30px) scale(1.1) !important; background: linear-gradient(to bottom, rgba(20, 30, 50, 0.95), rgba(10, 12, 16, 0.95)); border-color: var(--accent-gold); box-shadow: 0 0 40px rgba(197, 160, 40, 0.4), inset 0 0 20px rgba(197, 160, 40, 0.1); z-index: 100; animation: none; }
         .magic-menu-card:hover .card-icon { color: #fff; filter: drop-shadow(0 0 25px var(--magic-blue)); transform: scale(1.1) translateZ(30px); }
         .magic-menu-card:hover .card-label { color: #fff; text-shadow: 0 0 20px var(--magic-blue); transform: translateZ(30px); }
         .magic-menu-card:active { transform: translateY(-25px) scale(0.95); filter: brightness(1.3); }
         .magic-menu-card.disabled { opacity: 0.3; filter: grayscale(1); pointer-events: none; display:none; }
+
+        .nav-zone { display: none; }
 
         /* --- UI & HUD --- */
         .panel-glass { background: linear-gradient(135deg, #1a1a1a, #050505); border: 2px solid var(--accent-gold); padding: 50px; border-radius: 8px; text-align: center; width: 600px; max-width: 90%; box-shadow: 0 0 100px rgba(0,0,0,0.9); }
@@ -276,15 +284,35 @@
             background: linear-gradient(to right, #8b0000, #a00000, #8b0000);
             box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
             clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-            z-index: 100; transition: transform 0.3s; cursor: pointer;
+            z-index: 100; cursor: pointer; transform-origin: top center;
         }
-        .grimoire-bookmark:hover { transform: translateY(10px); }
+        .grimoire-bookmark:hover { animation: bookmarkSwing 1.5s ease-in-out infinite; }
+        @keyframes bookmarkSwing { 0% { transform: rotate(0deg); } 25% { transform: rotate(8deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(-8deg); } 100% { transform: rotate(0deg); } }
+        
         .grimoire-bookmark::after {
             content: '✦'; position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             color: #ffd700; font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
         #exit-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column; align-items:center; justify-content:center; color:#555; opacity:0; transition:opacity 1s; }
+
+        /* Grimoire Stars */
+        #grimoire-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .g-star { position: absolute; background: #fff; border-radius: 50%; animation: starPulse 3s infinite ease-in-out; }
+        @keyframes starPulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); box-shadow: none; } 50% { opacity: 1; transform: scale(1.3); box-shadow: 0 0 15px #fff, 0 0 8px #ffd700; } }
+
+        /* Menu Particles */
+        .menu-particle { position: fixed; width: 4px; height: 4px; background: radial-gradient(circle, #fff, var(--accent-gold)); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 8px var(--accent-gold); mix-blend-mode: screen; }
+
+        /* Mist Layer */
+        #mist-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(200, 220, 255, 0.1) 40%, rgba(255, 255, 255, 0.4) 100%);
+            backdrop-filter: blur(5px) grayscale(0.5);
+            z-index: 25000; pointer-events: none; opacity: 0; transition: opacity 1.5s ease-in-out;
+            mix-blend-mode: hard-light;
+        }
+        #mist-layer.active { opacity: 1; }
     </style>
 </head>
 <body>
@@ -317,6 +345,7 @@
     <div id="combo-pulse-layer"></div>
     <div id="time-warning-layer"></div>
     <div id="fade-layer"></div>
+    <div id="mist-layer"></div>
     <canvas id="portal-canvas"></canvas>
     <div id="black-hole"></div>
     
@@ -357,6 +386,7 @@
     
     <audio id="ost-menu" src="Sons/musica_menu.mp3" loop></audio> 
     <audio id="ost-game" src="Sons/musica_jogo.mp3" loop></audio>
+    <audio id="amb-menu" src="Sons/ambience_menu.mp3" loop></audio>
 
     <div id="screen-intro">
         <div class="intro-container">
@@ -373,10 +403,10 @@
             <div class="title-glow-fx"></div><div class="beta-badge">BETA PATCH 2.0</div>
             <div class="menu-options-container">
                 <div class="magic-menu-card disabled" id="btn-continue" onclick="playS('click'); continuarJogo()"><div class="card-icon">📜</div><div class="card-label" data-lang="menu_continue">Continuar</div></div>
-                <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label" data-lang="menu_play">Jogar</div></div>
-                <div class="magic-menu-card" id="btn-ngplus" style="display:none; border-color:var(--danger-red);" onclick="playS('click'); iniciarNewGamePlus()"><div class="card-icon" style="color:var(--danger-red);">🔥</div><div class="card-label" style="color:var(--danger-red);">New Game+</div></div>
+                <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label" data-lang="menu_play">Modo História</div></div>
+                <div class="magic-menu-card" id="btn-ngplus" style="display:none; border-color:var(--danger-red);" onclick="playS('click'); iniciarNewGamePlus()"><div class="card-icon" style="color:var(--danger-red);">🔥</div><div class="card-label" style="color:var(--danger-red);">Despertar Arcano</div></div>
                 <div class="magic-menu-card" id="btn-infinite" style="display:none; border-color:var(--chaos-purple);" onclick="playS('click'); openInfiniteMenu()"><div class="card-icon" style="color:var(--chaos-purple);">♾️</div><div class="card-label" style="color:var(--chaos-purple);" data-lang="menu_infinite">Infinito</div></div>
-                <div class="magic-menu-card" id="btn-grimoire-menu" style="display:none; border-color:var(--accent-gold);" onclick="playS('click'); abrirGrimorioDireto()"><div class="lock-icon" style="display:none;">🔒</div><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);" data-lang="menu_grimoire">Grimório</div></div>
+                <div class="magic-menu-card" id="btn-grimoire-menu" style="display:none; border-color:var(--accent-gold);" onclick="playS('click'); toggleGrimoireWithMist('open')"><div class="lock-icon" style="display:none;">🔒</div><div class="card-icon" style="color:var(--accent-gold);">📖</div><div class="card-label" style="color:var(--accent-gold);" data-lang="menu_grimoire">Grimório</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); abrirPerfilMenu()"><div class="card-icon">🧙‍♂️</div><div class="card-label" data-lang="menu_profile">Perfil</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); openConfigMenu('menu')"><div class="card-icon">⚙️</div><div class="card-label" data-lang="menu_options">Opções</div></div>
             </div>
@@ -432,14 +462,15 @@
         </div>
     </div>
 
-    <div id="screen-credits" class="screen" style="background:#000; z-index:20005; display:none;">
+    <div id="screen-credits" class="screen" style="background:radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); z-index:20005; display:none;">
+        <div id="grimoire-stars"></div>
         <div class="grimoire-container">
             <div class="grimoire-bookmark" onclick="playS('click')"></div>
             <div class="grimoire-header"><h1 class="grimoire-title">Grimório das Lendas</h1><div class="grimoire-subtitle">Os Desafios Superados</div></div>
             <div id="book-content" class="grimoire-page"></div>
             <div class="grimoire-nav"><button class="page-btn" id="prev-btn" onclick="prevPage()">❮</button><div class="page-number">Página <span id="page-num">1</span></div><button class="page-btn" id="next-btn" onclick="nextPage()">❯</button></div>
         </div>
-        <div class="grimoire-actions"><div class="btn-main" style="width:250px; background:rgba(0,0,0,0.8); border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 20px rgba(197, 160, 40, 0.3);" onclick="playS('click'); sairParaMenu()">Voltar ao Menu</div></div>
+        <div class="grimoire-actions"><div class="btn-main" style="width:250px; background:rgba(0,0,0,0.8); border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 20px rgba(197, 160, 40, 0.3); border-radius: 50px;" onclick="playS('click'); toggleGrimoireWithMist('close')">Voltar ao Menu</div></div>
     </div>
 
     <div id="modal-infinite" class="modal-overlay">
@@ -610,12 +641,12 @@
         // --- 2. GERENCIAMENTO DE ÁUDIO ---
         const sfx = { flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), chaos:new Audio('Sons/chaos.mp3'), swear:new Audio('Sons/raio.mp3'), achievement:new Audio('Sons/win.mp3'), alohomora:new Audio('Sons/alohomora.mp3'), combo:new Audio('Sons/combo.mp3'), expelliarmus:new Audio('Sons/expelliarmus.mp3'), thunder:new Audio('Sons/raio.mp3'), owl:new Audio('Sons/owl.mp3'), paper:new Audio('Sons/paper.mp3'), teleport:new Audio('Sons/teleport.mp3'), bookOpen:new Audio('Sons/paper.mp3') };
         class AudioManager { 
-            constructor(){this.bgMusic=null;this.gameMusic=null;}
-            init(){this.bgMusic=document.getElementById('ost-menu');this.gameMusic=document.getElementById('ost-game');this.bgMusic.volume=0.2;this.gameMusic.volume=0.2;}
-            playMenu(){if(this.gameMusic)this.gameMusic.pause();if(this.bgMusic){this.bgMusic.currentTime=0;this.bgMusic.play().catch(()=>{});}} 
-            playGame(){if(this.bgMusic)this.bgMusic.pause();if(this.gameMusic){this.gameMusic.currentTime=0;this.gameMusic.play().catch(()=>{});}} 
-            stopAll(){if(this.bgMusic)this.bgMusic.pause();if(this.gameMusic)this.gameMusic.pause();} 
-            updateVolume(){if(this.bgMusic)this.bgMusic.volume=cfg.m;if(this.gameMusic)this.gameMusic.volume=cfg.m;} 
+            constructor(){this.bgMusic=null;this.gameMusic=null;this.ambMenu=null;}
+            init(){this.bgMusic=document.getElementById('ost-menu');this.gameMusic=document.getElementById('ost-game');this.ambMenu=document.getElementById('amb-menu');this.bgMusic.volume=0.2;this.gameMusic.volume=0.2;if(this.ambMenu)this.ambMenu.volume=0.3;}
+            playMenu(){if(this.gameMusic)this.gameMusic.pause();if(this.bgMusic){this.bgMusic.currentTime=0;this.bgMusic.play().catch(()=>{});}if(this.ambMenu){this.ambMenu.currentTime=0;this.ambMenu.play().catch(()=>{});}} 
+            playGame(){if(this.bgMusic)this.bgMusic.pause();if(this.ambMenu)this.ambMenu.pause();if(this.gameMusic){this.gameMusic.currentTime=0;this.gameMusic.play().catch(()=>{});}} 
+            stopAll(){if(this.bgMusic)this.bgMusic.pause();if(this.gameMusic)this.gameMusic.pause();if(this.ambMenu)this.ambMenu.pause();} 
+            updateVolume(){if(this.bgMusic)this.bgMusic.volume=cfg.m;if(this.gameMusic)this.gameMusic.volume=cfg.m;if(this.ambMenu)this.ambMenu.volume=cfg.s*0.6;} 
         } 
         const audioManager = new AudioManager();
 
@@ -663,7 +694,13 @@
             
             const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
             gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
-            document.addEventListener("mousemove", resetAFKTimer); resetAFKTimer();
+            document.addEventListener("mousemove", (e) => {
+                resetAFKTimer();
+                // Menu Particles
+                if(document.getElementById('screen-menu').style.display !== 'none' && cfg.part) {
+                    createMenuParticle(e.clientX, e.clientY);
+                }
+            }); resetAFKTimer();
         });
 
         function initSlots() {
@@ -754,7 +791,7 @@
 
         // --- 5. NAVEGAÇÃO E FLUXO ---
         function playIntroSound() { const vid=document.getElementById('intro-video'); vid.muted=false; vid.loop=false; vid.currentTime=0; vid.play(); document.getElementById('start-btn-intro').style.display='none'; document.getElementById('skip-text').style.display='block'; vid.onended=endIntro; }
-        function endIntro() { document.getElementById('intro-video').pause(); gsap.to('#screen-intro', {opacity:0, duration:1, onComplete:()=>{ document.getElementById('screen-intro').style.display='none'; navegar('screen-menu'); audioManager.playMenu(); }}); }
+        function endIntro() { document.getElementById('intro-video').pause(); gsap.to('#screen-intro', {opacity:0, duration:1, onComplete:()=>{ document.getElementById('screen-intro').style.display='none'; navegar('screen-menu'); audioManager.playMenu(); animateMenuEntrance(); }}); }
         
         function navegar(id) { document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';}); const t=document.getElementById(id); if(t){t.style.display='flex';setTimeout(()=>t.classList.add('active'),10);} }
         
@@ -913,35 +950,7 @@
             checkSave();
 
             // Transição para o Grimório (Tela Final)
-            const gameScreen = document.getElementById('screen-game');
-            const bgLayer = document.getElementById('dynamic-bg-layer');
-
-            gsap.to(gameScreen, {
-                opacity: 0,
-                duration: 1.5,
-                ease: "power2.inOut",
-                onComplete: () => {
-                    gameScreen.style.display = 'none';
-                    gameScreen.style.opacity = 1; 
-                    
-                    // Reseta o fundo para evitar "fantasmas" dos bosses
-                    bgLayer.className = 'env-default';
-                    
-                    // Abre o Grimório
-                    navegar('screen-credits');
-                    currentBookPage = 0; 
-                    renderBookPage();
-                    
-                    // Animação de Entrada do Livro
-                    gsap.fromTo(".grimoire-container", 
-                        { scale: 0.5, opacity: 0, rotationY: 180 },
-                        { scale: 1, opacity: 1, rotationY: 0, duration: 1.5, ease: "back.out(1.2)" }
-                    );
-                    
-                    if(justUnlockedGrimoire) triggerGrimoireUnlockFX();
-                    playS('bookOpen', 0.8); // Som de abertura com pitch mais grave
-                }
-            });
+            toggleGrimoireWithMist('open', true);
         }
 
         function openInfiniteMenu() {
@@ -1123,6 +1132,7 @@
 
             const ng=document.getElementById('btn-ngplus'); if(prof.ngPlusUnlocked) ng.style.display='flex'; else ng.style.display='none';
             const inf=document.getElementById('btn-infinite'); if(prof.infiniteUnlocked) inf.style.display='flex'; else inf.style.display='none';
+            if(document.getElementById('screen-menu').style.display !== 'none') animateMenuEntrance();
         }
         
         function fecharJogo() { playS('click'); document.getElementById('exit-screen').style.display='flex'; setTimeout(()=>document.getElementById('exit-screen').style.opacity=1,10); setTimeout(()=>{ if(ipcRenderer)ipcRenderer.send('app-quit'); else window.close(); },2000); }
@@ -1186,6 +1196,31 @@
         function setGfx(t,v){cfg[t]=v;if(t==='part')document.body.classList.toggle('no-particles',!v);DB.setItem('aa_cfg',JSON.stringify(cfg));}
         function setAudio(t,v){if(t==='m')cfg.m=v;if(t==='s')cfg.s=v;DB.setItem('aa_cfg',JSON.stringify(cfg));audioManager.updateVolume();}
         function deletarSave() { if(confirm("Apagar tudo?")) { DB.removeItem('aa_prof'); DB.removeItem('aa_save'); location.reload(); } }
+
+        function animateMenuEntrance() {
+            const visibleCards = Array.from(document.querySelectorAll('.magic-menu-card')).filter(c => window.getComputedStyle(c).display !== 'none');
+            
+            // Animação de entrada em sequência (Stagger)
+            gsap.from(visibleCards, {
+                y: 100, opacity: 0, scale: 0.8,
+                duration: 0.8, stagger: 0.1, ease: "back.out(1.2)",
+                clearProps: "all"
+            });
+        }
+
+        function createMenuParticle(x, y) {
+            const p = document.createElement('div');
+            p.className = 'menu-particle';
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+            document.body.appendChild(p);
+            
+            gsap.to(p, {
+                x: (Math.random() - 0.5) * 60,
+                y: (Math.random() - 0.5) * 60 + 30,
+                opacity: 0, scale: 0, duration: 1 + Math.random(), ease: "power1.out", onComplete: () => p.remove()
+            });
+        }
 
         // --- 7. VFX E ANIMAÇÕES ---
         function triggerLevelUpFX() {
@@ -1362,7 +1397,23 @@
                 scheduleTaunt();
             },t);
         }
-        function resetAFKTimer(){clearTimeout(afkTimer);if(game.afkMode){gsap.to("body",{filter:"none",scale:1,duration:1});game.afkMode=false;}afkTimer=setTimeout(()=>{game.afkMode=true;gsap.to("body",{filter:"blur(5px) sepia(0.5)",scale:1.02,duration:5,repeat:-1,yoyo:true});notificar("zzz...");},300000); }
+        
+        function resetAFKTimer() {
+            clearTimeout(afkTimer);
+            afkTimer = setTimeout(triggerObliviate, 180000); // 3 minutos
+        }
+
+        function triggerObliviate() {
+            playS('chaos'); // Som mágico/caótico
+            const flash = document.createElement('div');
+            flash.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;opacity:0;pointer-events:none;";
+            document.body.appendChild(flash);
+            
+            gsap.to(flash, {opacity: 1, duration: 1.5, ease: "power2.in", onComplete: () => {
+                sairParaMenu(); // Reseta para o menu
+                gsap.to(flash, {opacity: 0, duration: 2, delay: 0.5, onComplete: () => flash.remove()});
+            }});
+        }
         
         let achievementQueue = [];
         let isAchQueueRunning = false;
@@ -1434,11 +1485,49 @@
             }, 4000);
         }
 
-        function abrirGrimorioDireto() { 
-            const g = document.getElementById('btn-grimoire-menu'); if(g) g.classList.remove('glow-gold');
-            justUnlockedGrimoire = false;
-            navegar('screen-credits'); currentBookPage = 0; renderBookPage(); 
+        function initGrimoireStars() {
+            const c = document.getElementById('grimoire-stars');
+            if(!c) return;
+            c.innerHTML = '';
+            for(let i=0; i<80; i++) {
+                const s = document.createElement('div');
+                s.className = 'g-star';
+                s.style.left = Math.random()*100 + '%';
+                s.style.top = Math.random()*100 + '%';
+                const size = Math.random()*3 + 1;
+                s.style.width = size + 'px';
+                s.style.height = size + 'px';
+                s.style.animationDelay = Math.random()*3 + 's';
+                s.style.animationDuration = (2 + Math.random()*3) + 's';
+                c.appendChild(s);
+            }
         }
+
+        function toggleGrimoireWithMist(action, fromGame = false) {
+            const mist = document.getElementById('mist-layer');
+            mist.classList.add('active');
+            playS('teleport', 0.6); // Som suave de teleporte/névoa
+
+            setTimeout(() => {
+                if (action === 'open') {
+                    const g = document.getElementById('btn-grimoire-menu'); if(g) g.classList.remove('glow-gold');
+                    if(fromGame) {
+                        document.getElementById('screen-game').style.display = 'none';
+                        document.getElementById('dynamic-bg-layer').className = 'env-default';
+                    }
+                    justUnlockedGrimoire = false;
+                    navegar('screen-credits'); 
+                    currentBookPage = 0; 
+                    renderBookPage(); 
+                    initGrimoireStars();
+                    if(fromGame && justUnlockedGrimoire) triggerGrimoireUnlockFX();
+                } else {
+                    sairParaMenu();
+                }
+                setTimeout(() => mist.classList.remove('active'), 800);
+            }, 1500);
+        }
+
         function renderBookPage(dir=0) { 
             const c = document.getElementById('book-content'); const pNum = document.getElementById('page-num');
             if(dir!==0) playS('paper');
@@ -1473,12 +1562,12 @@
                             <div style="width:140px; height:140px; border-radius:50%; border:4px double var(--accent-gold); overflow:hidden; margin-bottom:20px; box-shadow:0 0 20px rgba(0,0,0,0.4); background:#000;">
                                 <img src="Imagens/Personagens/mago_sabio.png" style="width:100%; height:100%; object-fit:cover;">
                             </div>
-                            <div style="font-family:'Cinzel'; font-size:1.8rem; color:#8b0000; margin-bottom:10px; font-weight:bold;">Davi Eduardo (Kyter)</div>
-                            <div style="font-family:'Cinzel'; font-size:1rem; color:#555; margin-bottom:30px; text-transform:uppercase; letter-spacing:2px;">Desenvolvedor & Game Designer</div>
+                            <div style="font-family:'Cinzel'; font-size:1.8rem; color:#8b0000; margin-bottom:10px; font-weight:bold;">Davi Eduardo</div>
+                            <div style="font-family:'Cinzel'; font-size:1rem; color:#555; margin-bottom:30px; text-transform:uppercase; letter-spacing:2px;">Dev Junior e Junior Game Designer</div>
                             <p id="type-target" style="font-family:'MedievalSharp'; font-size:1.3rem; color:#2c1e0b; line-height:1.8; max-width:85%; font-style:italic;"></p>
                         </div>
                     `;
-                    textToType = "Este jogo foi desenvolvido e criado por mim com muita dedicação. Obrigado por completar esta jornada e desvendar os segredos da Arcane Academy."; 
+                    textToType = "Este é meu primeiro projeto solo, desenvolvido e criado com muita dedicação. Obrigado por completar esta jornada e desvendar os segredos da Arcane Academy."; 
                     targetId = "type-target";
                 }
                 else if(currentBookPage===12) {
@@ -1535,7 +1624,6 @@
         }
 
         function createBookDust() {
-            playS('match', 2.0); // Som de poeira mágica (agudo e rápido)
             const container = document.getElementById('vfx-container');
             const rect = document.querySelector('.grimoire-container').getBoundingClientRect();
             const cx = rect.left + rect.width/2;
