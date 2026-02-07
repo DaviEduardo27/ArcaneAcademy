@@ -792,6 +792,55 @@
             'Balanca-Photoroom.png': '#f39c12' // Dourado Justiça
         };
 
+        // --- ASSET MANAGER (PRELOAD SYSTEM) ---
+        const AssetManager = {
+            images: {}, // Cache de imagens carregadas
+            
+            // Carrega uma imagem e armazena em memória
+            loadImage(key, src) {
+                return new Promise((resolve) => {
+                    if (this.images[key]) return resolve(this.images[key]);
+                    const img = new Image();
+                    img.onload = () => {
+                        this.images[key] = img;
+                        resolve(img);
+                    };
+                    img.onerror = () => {
+                        console.warn(`[AssetManager] Falha ao carregar: ${src}`);
+                        resolve(null); // Resolve para não quebrar o Promise.all
+                    };
+                    img.src = src;
+                });
+            },
+
+            // Retorna o src da imagem pré-carregada (ou string vazia se falhar)
+            getSrc(key) {
+                if (this.images[key]) return this.images[key].src;
+                // Fallback: tenta retornar o caminho original se soubermos construir, 
+                // mas idealmente tudo deve estar pré-carregado.
+                console.warn(`[AssetManager] Asset não encontrado no cache: ${key}`);
+                return ''; 
+            },
+
+            async init() {
+                console.log("[AssetManager] Iniciando preload de assets...");
+                const bgList = ['bg_glacia.jpg', 'bg_thalros.jpg', 'bg_umbra.jpg', 'bg_ferrum.jpg', 'bg_solari.jpg', 'bg_aurelius.jpg', 'bg_malakor.jpg', 'bg_sertis.jpg', 'bg_trion.jpg', 'bg_gaiaos.jpg'];
+                
+                const promises = [
+                    // UI Básica
+                    this.loadImage('capa', 'Imagens/CapaGame.jpg'),
+                    this.loadImage('icone_back', 'Imagens/icone.png'),
+                    // Dados do Jogo
+                    ...avatares.map(a => this.loadImage(a.file, `Imagens/Personagens/${a.file}`)),
+                    ...bosses.map(b => this.loadImage(b.file, `Imagens/Monstros/${b.file}`)),
+                    ...items.map(i => this.loadImage(i, `Imagens/Icones/${i}`)),
+                    ...bgList.map(bg => this.loadImage(bg, `Imagens/Fundos/${bg}`)) // Cache para CSS
+                ];
+                await Promise.all(promises);
+                console.log("[AssetManager] Preload concluído.");
+            }
+        };
+
         // BASE DE DADOS EXPANDIDA (50 PERGUNTAS)
         const triviaDB = [
             // Geral & Alquimia
@@ -937,6 +986,7 @@
             checkSave();
             checkAchievements('startup');
             initAudioVisualizer();
+            AssetManager.init(); // Inicia o preload em background enquanto a intro roda
             
             const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
             gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
@@ -957,7 +1007,7 @@
                 if(pData) {
                     const av = avatares[pData.av] || avatares[0];
                     html = `<div class="btn-delete-slot" onclick="event.stopPropagation(); deleteSlot(${i})">✖</div>
-                            <img src="Imagens/Personagens/${av.file}" class="slot-avatar" style="border-color:${av.color}; width:80px; height:80px;">
+                            <img src="${AssetManager.getSrc(av.file)}" class="slot-avatar" style="border-color:${av.color}; width:80px; height:80px;">
                             <div class="slot-info"><div class="slot-name">${pData.nome}</div><div>Nível ${pData.lvl}</div></div>`;
                 } else {
                     html = `<div class="slot-avatar" style="background:#111; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#333;">+</div>
@@ -1057,7 +1107,7 @@
         function carregarFase(f) {
             game.fase = f; UI.hud.fase.innerText = f; UI.hud.score.innerText = game.score; UI.board.innerHTML = '';
             let bIdx = (f-1)%bosses.length; if(game.infiniteMode) bIdx = Math.floor(Math.random()*bosses.length); currentBossIndex = bIdx; const b = bosses[bIdx];
-            document.getElementById('boss-img-tag').src = `Imagens/Monstros/${b.file}`; document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.textShadow = "0 0 20px " + b.color; document.getElementById('dynamic-bg-layer').className = b.env;
+            document.getElementById('boss-img-tag').src = AssetManager.getSrc(b.file); document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.textShadow = "0 0 20px " + b.color; document.getElementById('dynamic-bg-layer').className = b.env;
             
             let n = 16;
             if (game.ngPlus) n = 24;
@@ -1076,7 +1126,7 @@
                 const wrapper = document.createElement('div'); wrapper.className = 'card-wrapper';
                 const c = document.createElement('div'); c.className = 'card'; 
                 c.dataset.icon = icon; 
-                c.innerHTML = `<div class="face front"><img src="Imagens/Icones/${icon}" alt="Item"></div><div class="face back"></div>`;
+                c.innerHTML = `<div class="face front"><img src="${AssetManager.getSrc(icon)}" alt="Item"></div><div class="face back"></div>`;
                 c.onclick = () => cardClick(c, icon); 
                 wrapper.appendChild(c);
                 UI.board.appendChild(wrapper);
@@ -1295,7 +1345,7 @@
 
             chaosInternalTimer = setTimeout(() => {
                 const icons = validCards.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
-                validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerHTML = `<img src="Imagens/Icones/${icons[i]}" alt="Item">`; });
+                validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerHTML = `<img src="${AssetManager.getSrc(icons[i])}" alt="Item">`; });
                 
                 gsap.to(wrappers, { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)", stagger: 0.02, clearProps:"all", onComplete: () => { 
                     validCards.forEach(c => c.classList.remove('chaos-glow')); game.chaosActive = false; 
@@ -1486,7 +1536,7 @@
             
             const pEdit = document.getElementById('prof-av-edit');
             if(pEdit) {
-                pEdit.src=`Imagens/Personagens/${a.file}`; 
+                pEdit.src=AssetManager.getSrc(a.file); 
                 pEdit.style.borderColor = c; pEdit.style.boxShadow = glow;
                 if(isLocked) { pEdit.style.border = "4px solid #333"; pEdit.style.boxShadow = "none"; }
                 else m.apply(pEdit, c);
@@ -1502,9 +1552,9 @@
                 validM.apply(profFrame, c);
             }
 
-            const dashAvImg = document.getElementById('dash-av-img'); if(dashAvImg) dashAvImg.src=`Imagens/Personagens/${a.file}`; 
+            const dashAvImg = document.getElementById('dash-av-img'); if(dashAvImg) dashAvImg.src=AssetManager.getSrc(a.file); 
             
-            const hudAvImg = document.getElementById('hud-av-img'); if(hudAvImg) hudAvImg.src=`Imagens/Personagens/${a.file}`; 
+            const hudAvImg = document.getElementById('hud-av-img'); if(hudAvImg) hudAvImg.src=AssetManager.getSrc(a.file); 
             
             const hudFrame = document.querySelector('#hud-avatar-container .avatar-frame');
             if(hudFrame) {
@@ -1880,7 +1930,7 @@
                 }
                 else if(currentBookPage<=10) { 
                     const b=bosses[currentBookPage-1]; 
-                    c.innerHTML=`<div class="boss-portrait"><img src="Imagens/Monstros/${b.file}"></div><h2>${b.n}</h2><p id="type-target"></p>`; 
+                    c.innerHTML=`<div class="boss-portrait"><img src="${AssetManager.getSrc(b.file)}"></div><h2>${b.n}</h2><p id="type-target"></p>`; 
                     textToType = b.lore; targetId = "type-target";
                 }
                 else if(currentBookPage===11) {
@@ -1889,7 +1939,7 @@
                         <div class="grimoire-header" style="border-bottom: 2px solid var(--accent-gold); margin-bottom: 30px;"><h1 class="grimoire-title" style="font-size:3rem;">O Criador</h1></div>
                         <div style="text-align:center; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:center;">
                             <div style="width:140px; height:140px; border-radius:50%; border:4px double var(--accent-gold); overflow:hidden; margin-bottom:20px; box-shadow:0 0 20px rgba(0,0,0,0.4); background:#000;">
-                                <img src="Imagens/Personagens/mago_sabio.png" style="width:100%; height:100%; object-fit:cover;">
+                                <img src="${AssetManager.getSrc('mago_sabio.png')}" style="width:100%; height:100%; object-fit:cover;">
                             </div>
                             <div style="font-family:'Cinzel'; font-size:1.8rem; color:#8b0000; margin-bottom:10px; font-weight:bold;">Davi Eduardo</div>
                             <div style="font-family:'Cinzel'; font-size:1rem; color:#555; margin-bottom:30px; text-transform:uppercase; letter-spacing:2px;">Dev Junior e Junior Game Designer</div>
