@@ -488,81 +488,25 @@
         <div class="btn-gear" onclick="playS('click'); openConfigMenu('game')">⚙️</div>
     </div>
 
-    <div id="screen-profile" class="screen profile-screen-bg">
-        <div class="profile-particles"></div>
-        <div class="profile-container glass-panel-premium">
-            <!-- Left Column: Identity -->
-            <div class="profile-identity-section">
-                <div class="avatar-display-wrapper">
-                    <div class="avatar-glow-ring"></div>
-                    <div class="avatar-frame-large" id="profile-avatar-frame">
-                        <img id="dash-av-img" src="" alt="Avatar">
-                        <img id="prof-av-edit" src="" alt="Avatar Edit" style="display:none;">
-                    </div>
-                    <!-- Controls moved below for better layout -->
-                    <div id="avatar-controls" class="avatar-controls" style="display:none; margin-top: 15px;">
-                        <button class="magic-arrow-btn" onclick="playS('click'); mudarAvatar(-1)">❮</button>
-                        <span class="control-label">Avatar</span>
-                        <button class="magic-arrow-btn" onclick="playS('click'); mudarAvatar(1)">❯</button>
-                    </div>
-                    <div id="frame-controls" class="avatar-controls" style="display:none; margin-top: 5px;">
-                        <button class="magic-arrow-btn" onclick="playS('click'); mudarFrame(-1)">❮</button>
-                        <div class="frame-info"><span id="frame-name">Padrão</span></div>
-                        <button class="magic-arrow-btn" onclick="playS('click'); mudarFrame(1)">❯</button>
-                    </div>
+    <div id="screen-profile" class="screen">
+        <div class="panel-glass">
+            <h2 style="color:var(--accent-gold)" data-lang="profile_title">REGISTRO MÁGICO</h2>
+            <div id="profile-edit">
+                <div class="avatar-selector"><button class="arrow-btn" onclick="playS('click'); mudarAvatar(-1)">❮</button><img id="prof-av-edit" class="prof-img-large" src=""><button class="arrow-btn" onclick="playS('click'); mudarAvatar(1)">❯</button></div>
+                <div class="frame-selector" style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:20px;">
+                    <button class="arrow-btn" onclick="playS('click'); mudarFrame(-1)" style="font-size:2rem;">❮</button>
+                    <div style="text-align:center; width:200px;"><div id="frame-name" style="font-family:'Cinzel'; color:var(--accent-gold); font-size:1.2rem;">Padrão</div><div id="frame-req" style="font-size:0.8rem; color:#666;">Desbloqueado</div></div>
+                    <button class="arrow-btn" onclick="playS('click'); mudarFrame(1)" style="font-size:2rem;">❯</button>
                 </div>
-                
-                <div class="player-identity">
-                    <h1 id="dash-name" class="player-name">Nome do Jogador</h1>
-                    <input type="text" id="prof-name-input" class="player-name-input" placeholder="Nome do Mago" style="display:none;">
-                    <div class="player-title-badge"><span id="dash-title">Aprendiz</span></div>
-                </div>
+                <input type="text" id="prof-name-input" class="input-magico" placeholder="Seu Nome"><br><br>
+                <div class="btn-main" onclick="playS('click'); salvarPerfil()" data-lang="btn_save">Salvar</div>
+                <div class="btn-main" style="margin-top:10px; opacity:0.7;" onclick="playS('click'); navegar('screen-menu')" data-lang="btn_back">Voltar</div>
             </div>
-
-            <!-- Right Column: Stats & Details -->
-            <div class="profile-stats-section">
-                <div class="profile-header-minimal">
-                    <div class="profile-section-title" data-lang="profile_title">Registro Mágico</div>
-                    <div class="faction-icon" title="Arcane Academy"><img src="Imagens/icone.png" style="width:30px; opacity:0.7;"></div>
-                </div>
-
-                <div class="mana-bar-container">
-                    <div class="mana-info">
-                        <span class="level-label" data-lang="stat_lvl">Nível Arcano <span id="dash-lvl" style="color:#fff; font-weight:bold;">1</span></span>
-                        <span class="xp-text"><span id="dash-xp-current">0</span> / <span id="dash-xp-next">100</span> XP</span>
-                    </div>
-                    <div class="mana-track"><div class="mana-fill" id="dash-xp-bar" style="width: 0%"></div></div>
-                </div>
-
-                <div class="stats-grid-modern">
-                    <div class="stat-card-modern">
-                        <div class="stat-icon-modern">🏆</div>
-                        <div class="stat-data-modern"><span class="stat-label-modern" data-lang="stat_record">Recorde</span><span class="stat-value-modern" id="dash-score">0</span></div>
-                    </div>
-                    <div class="stat-card-modern">
-                        <div class="stat-icon-modern">⚔️</div>
-                        <div class="stat-data-modern"><span class="stat-label-modern">Vitórias</span><span class="stat-value-modern" id="dash-wins">0</span></div>
-                    </div>
-                    <div class="stat-card-modern">
-                        <div class="stat-icon-modern">🕹️</div>
-                        <div class="stat-data-modern"><span class="stat-label-modern">Partidas</span><span class="stat-value-modern" id="dash-games">0</span></div>
-                    </div>
-                    <div class="stat-card-modern">
-                        <div class="stat-icon-modern">⏳</div>
-                        <div class="stat-data-modern"><span class="stat-label-modern">Tempo</span><span class="stat-value-modern" id="dash-time">0h</span></div>
-                    </div>
-                </div>
-
-                <div class="profile-actions" style="margin-top: auto; padding-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
-                    <div id="view-mode-btns" class="action-group" style="display:flex; gap:15px;">
-                        <button class="btn-hogwarts" onclick="playS('click'); editarPerfil()" data-lang="btn_edit">Editar</button>
-                        <button class="btn-hogwarts" onclick="playS('click'); navegar('screen-menu')" data-lang="btn_back">Voltar</button>
-                    </div>
-                    <div id="edit-mode-btns" class="action-group" style="display:none; gap:15px;">
-                        <button class="btn-hogwarts" style="border-color:var(--magic-blue); color:var(--magic-blue);" onclick="playS('click'); salvarPerfil()" data-lang="btn_save">Salvar</button>
-                        <button class="btn-hogwarts" style="border-color:#666; color:#aaa;" onclick="playS('click'); cancelarEdicao()" data-lang="btn_cancel">Cancelar</button>
-                    </div>
-                </div>
+            <div id="profile-dash" style="display:none;">
+                <div class="dash-header"><div class="dash-avatar"><img id="dash-av-img" src=""></div><div class="dash-info"><h1 id="dash-name">Nome</h1><div id="dash-title">Aprendiz</div></div></div>
+                <div class="dash-stats-grid"><div class="stat-box"><div class="stat-label" data-lang="stat_lvl">NÍVEL</div><div class="stat-val-big" id="dash-lvl">1</div></div><div class="stat-box"><div class="stat-label" data-lang="stat_record">RECORDE</div><div class="stat-val-big" id="dash-score">0</div></div></div>
+                <div class="btn-main" onclick="playS('click'); editarPerfil()" data-lang="btn_edit">Editar</div>
+                <div class="btn-main" onclick="playS('click'); navegar('screen-menu')" data-lang="btn_back">Voltar</div>
             </div>
         </div>
     </div>
@@ -835,6 +779,7 @@
         
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, missCombo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
         let afkTimer, lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null, speechHideTimer = null, typewriterTimer = null;
+        let lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null, speechHideTimer = null, typewriterTimer = null;
 
         // --- 4. INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
