@@ -181,8 +181,9 @@
         /* OBS: Transição via GSAP no JS, removida do CSS para não conflitar */
         @keyframes cardFloat { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
         
-        .face { width: 100%; height: 100%; position: absolute; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem; backface-visibility: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); }
-        .front { background: #e0e0e0; transform: rotateY(180deg); border: 2px solid #555; color: #222; }
+        .face { width: 100%; height: 100%; position: absolute; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem; backface-visibility: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); overflow: hidden; }
+        .front { background: #e0e0e0; transform: rotateY(180deg); border: 2px solid #555; color: #222; transition: border-color 0.3s, box-shadow 0.3s; }
+        .face.front img { width: 150%; height: 150%; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); pointer-events: none; }
         
         /* CORREÇÃO DO VERSO (ICONE.PNG) */
         .back { 
@@ -313,6 +314,63 @@
             mix-blend-mode: hard-light;
         }
         #mist-layer.active { opacity: 1; }
+
+        /* --- NEW PROFILE SCREEN STYLES --- */
+        .profile-screen-bg { background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); overflow: hidden; }
+        .glass-panel-premium { background: rgba(10, 12, 16, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(197, 160, 40, 0.3); box-shadow: 0 0 80px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5); border-radius: 16px; width: 900px; max-width: 95%; padding: 40px; display: flex; flex-direction: column; position: relative; z-index: 10; }
+        .profile-header { text-align: center; margin-bottom: 30px; }
+        .profile-page-title { font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 6px; margin: 0; text-shadow: 0 0 15px rgba(197, 160, 40, 0.5); }
+        .profile-divider { height: 2px; width: 150px; background: linear-gradient(90deg, transparent, var(--accent-gold), transparent); margin: 10px auto 0; }
+        .profile-content { display: flex; gap: 50px; align-items: center; }
+        @media (max-width: 800px) { .profile-content { flex-direction: column; gap: 30px; } }
+        
+        /* Left Column */
+        .profile-identity-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .avatar-display-wrapper { position: relative; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        .avatar-glow-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, rgba(197, 160, 40, 0.2) 0%, transparent 70%); animation: pulseGlow 3s infinite ease-in-out; z-index: 0; }
+        .avatar-frame-large { width: 180px; height: 180px; border-radius: 50%; overflow: hidden; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 1; position: relative; background: #000; transition: all 0.3s ease; }
+        .avatar-frame-large img { width: 100%; height: 100%; object-fit: cover; }
+        .player-identity { text-align: center; width: 100%; }
+        .player-name { font-family: 'Cinzel', serif; font-size: 2rem; color: #fff; margin: 10px 0 5px; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        .player-name-input { background: rgba(255,255,255,0.05); border: none; border-bottom: 2px solid var(--accent-gold); color: #fff; font-family: 'Cinzel', serif; font-size: 1.8rem; text-align: center; width: 100%; padding: 5px; margin: 10px 0; outline: none; }
+        .player-title { font-family: 'MedievalSharp', cursive; font-size: 1.2rem; color: var(--magic-blue); letter-spacing: 2px; text-transform: uppercase; }
+        
+        /* Controls */
+        .avatar-controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 10px; width: 100%; }
+        .magic-arrow-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--accent-gold); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .magic-arrow-btn:hover { background: var(--accent-gold); color: #000; box-shadow: 0 0 10px var(--accent-gold); }
+        .control-label { font-family: 'Cinzel'; font-size: 0.9rem; color: #aaa; }
+        .frame-info { text-align: center; min-width: 120px; }
+        .frame-info span { display: block; color: var(--accent-gold); font-family: 'Cinzel'; font-size: 1rem; }
+        .frame-info small { display: block; color: #666; font-size: 0.75rem; }
+        
+        /* Right Column */
+        .profile-stats-section { flex: 1.5; display: flex; flex-direction: column; gap: 25px; }
+        .level-progress-container { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .level-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-family: 'Cinzel'; }
+        .level-label { color: #aaa; font-size: 0.9rem; letter-spacing: 1px; }
+        .level-value { color: var(--accent-gold); font-size: 1.2rem; font-weight: bold; }
+        .xp-bar-track { width: 100%; height: 10px; background: #111; border-radius: 5px; overflow: hidden; box-shadow: inset 0 0 5px #000; position: relative; }
+        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--magic-blue), #00d2ff); box-shadow: 0 0 10px var(--magic-blue); transition: width 1s ease-out; }
+        .xp-text { text-align: right; font-size: 0.8rem; color: #666; margin-top: 5px; font-family: 'MedievalSharp'; }
+        
+        .stats-grid-premium { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-card-premium { background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2)); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px; transition: transform 0.2s; }
+        .stat-card-premium:hover { transform: translateY(-2px); border-color: var(--accent-gold); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .stat-icon { font-size: 2rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+        .stat-details { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-family: 'Cinzel'; font-size: 1.4rem; color: #fff; font-weight: bold; }
+        
+        /* Buttons */
+        .profile-actions { margin-top: 10px; display: flex; justify-content: flex-end; }
+        .action-group { display: flex; gap: 15px; }
+        .btn-premium { background: linear-gradient(180deg, rgba(20, 30, 40, 0.9), #050505); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 12px 30px; font-family: 'Cinzel'; font-size: 1rem; letter-spacing: 2px; cursor: pointer; transition: all 0.3s ease; border-radius: 4px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+        .btn-premium:hover { background: var(--accent-gold); color: #000; box-shadow: 0 0 20px rgba(197, 160, 40, 0.4); transform: translateY(-2px); }
+        .btn-secondary { border-color: #555; color: #aaa; }
+        .btn-secondary:hover { background: #333; color: #fff; border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .btn-save { border-color: var(--magic-blue); color: var(--magic-blue); }
+        .btn-save:hover { background: var(--magic-blue); color: #fff; box-shadow: 0 0 20px var(--magic-blue); }
     </style>
 </head>
 <body>
@@ -430,25 +488,53 @@
         <div class="btn-gear" onclick="playS('click'); openConfigMenu('game')">⚙️</div>
     </div>
 
-    <div id="screen-profile" class="screen">
-        <div class="panel-glass">
-            <h2 style="color:var(--accent-gold)" data-lang="profile_title">REGISTRO MÁGICO</h2>
-            <div id="profile-edit">
-                <div class="avatar-selector"><button class="arrow-btn" onclick="playS('click'); mudarAvatar(-1)">❮</button><img id="prof-av-edit" class="prof-img-large" src=""><button class="arrow-btn" onclick="playS('click'); mudarAvatar(1)">❯</button></div>
-                <div class="frame-selector" style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:20px;">
-                    <button class="arrow-btn" onclick="playS('click'); mudarFrame(-1)" style="font-size:2rem;">❮</button>
-                    <div style="text-align:center; width:200px;"><div id="frame-name" style="font-family:'Cinzel'; color:var(--accent-gold); font-size:1.2rem;">Padrão</div><div id="frame-req" style="font-size:0.8rem; color:#666;">Desbloqueado</div></div>
-                    <button class="arrow-btn" onclick="playS('click'); mudarFrame(1)" style="font-size:2rem;">❯</button>
-                </div>
-                <input type="text" id="prof-name-input" class="input-magico" placeholder="Seu Nome"><br><br>
-                <div class="btn-main" onclick="playS('click'); salvarPerfil()" data-lang="btn_save">Salvar</div>
-                <div class="btn-main" style="margin-top:10px; opacity:0.7;" onclick="playS('click'); navegar('screen-menu')" data-lang="btn_back">Voltar</div>
+    <div id="screen-profile" class="screen profile-screen-bg">
+        <div class="profile-particles"></div>
+        <div class="profile-container glass-panel-premium">
+            <div class="profile-header">
+                <h2 class="profile-page-title" data-lang="profile_title">Grimório do Mago</h2>
+                <div class="profile-divider"></div>
             </div>
-            <div id="profile-dash" style="display:none;">
-                <div class="dash-header"><div class="dash-avatar"><img id="dash-av-img" src=""></div><div class="dash-info"><h1 id="dash-name">Nome</h1><div id="dash-title">Aprendiz</div></div></div>
-                <div class="dash-stats-grid"><div class="stat-box"><div class="stat-label" data-lang="stat_lvl">NÍVEL</div><div class="stat-val-big" id="dash-lvl">1</div></div><div class="stat-box"><div class="stat-label" data-lang="stat_record">RECORDE</div><div class="stat-val-big" id="dash-score">0</div></div></div>
-                <div class="btn-main" onclick="playS('click'); editarPerfil()" data-lang="btn_edit">Editar</div>
-                <div class="btn-main" onclick="playS('click'); navegar('screen-menu')" data-lang="btn_back">Voltar</div>
+            <div class="profile-content">
+                <!-- Left Column: Avatar & Identity -->
+                <div class="profile-identity-section">
+                    <div class="avatar-display-wrapper">
+                        <div class="avatar-glow-ring"></div>
+                        <div class="avatar-frame-large" id="profile-avatar-frame">
+                            <img id="dash-av-img" src="" alt="Avatar">
+                            <img id="prof-av-edit" src="" alt="Avatar Edit" style="display:none;">
+                        </div>
+                        <div id="avatar-controls" class="avatar-controls" style="display:none;">
+                            <button class="magic-arrow-btn" onclick="playS('click'); mudarAvatar(-1)">❮</button><span class="control-label">Avatar</span><button class="magic-arrow-btn" onclick="playS('click'); mudarAvatar(1)">❯</button>
+                        </div>
+                        <div id="frame-controls" class="avatar-controls" style="display:none;">
+                            <button class="magic-arrow-btn" onclick="playS('click'); mudarFrame(-1)">❮</button><div class="frame-info"><span id="frame-name">Padrão</span><small id="frame-req">Desbloqueado</small></div><button class="magic-arrow-btn" onclick="playS('click'); mudarFrame(1)">❯</button>
+                        </div>
+                    </div>
+                    <div class="player-identity">
+                        <h1 id="dash-name" class="player-name">Nome do Jogador</h1>
+                        <input type="text" id="prof-name-input" class="player-name-input" placeholder="Seu Nome" style="display:none;">
+                        <div id="dash-title" class="player-title">Aprendiz</div>
+                    </div>
+                </div>
+                <!-- Right Column: Stats & Details -->
+                <div class="profile-stats-section">
+                    <div class="level-progress-container">
+                        <div class="level-info"><span class="level-label" data-lang="stat_lvl">Nível Arcano</span><span class="level-value" id="dash-lvl">1</span></div>
+                        <div class="xp-bar-track"><div class="xp-bar-fill" id="dash-xp-bar" style="width: 0%"></div></div>
+                        <div class="xp-text"><span id="dash-xp-current">0</span> / <span id="dash-xp-next">100</span> XP</div>
+                    </div>
+                    <div class="stats-grid-premium">
+                        <div class="stat-card-premium"><div class="stat-icon">🏆</div><div class="stat-details"><span class="stat-label" data-lang="stat_record">Recorde</span><span class="stat-value" id="dash-score">0</span></div></div>
+                        <div class="stat-card-premium"><div class="stat-icon">⚔️</div><div class="stat-details"><span class="stat-label">Vitórias</span><span class="stat-value" id="dash-wins">0</span></div></div>
+                        <div class="stat-card-premium"><div class="stat-icon">🕹️</div><div class="stat-details"><span class="stat-label">Partidas</span><span class="stat-value" id="dash-games">0</span></div></div>
+                        <div class="stat-card-premium"><div class="stat-icon">⏳</div><div class="stat-details"><span class="stat-label">Tempo</span><span class="stat-value" id="dash-time">0h</span></div></div>
+                    </div>
+                    <div class="profile-actions">
+                        <div id="view-mode-btns" class="action-group"><button class="btn-premium" onclick="playS('click'); editarPerfil()" data-lang="btn_edit"><span class="btn-icon">✎</span> Editar</button><button class="btn-premium btn-secondary" onclick="playS('click'); navegar('screen-menu')" data-lang="btn_back"><span class="btn-icon">↩</span> Voltar</button></div>
+                        <div id="edit-mode-btns" class="action-group" style="display:none;"><button class="btn-premium btn-save" onclick="playS('click'); salvarPerfil()" data-lang="btn_save"><span class="btn-icon">💾</span> Salvar</button><button class="btn-premium btn-secondary" onclick="playS('click'); cancelarEdicao()" data-lang="btn_cancel"><span class="btn-icon">✖</span> Cancelar</button></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -550,20 +636,45 @@
         const titulos = ["Aprendiz", "Novato", "Estudante", "Adepto", "Feiticeiro", "Mago", "Bruxo", "Encantador", "Mestre", "Grão-Mestre", "Arquimago", "Auror", "Lenda", "Semideus", "Divindade Arcana"];
         
         const bosses = [
-            { n:"Glacia", title:"A Sentinela do Inverno", file:"fada_gelo.png", color:"#00d2ff", lore:"Antigamente uma fada que trazia o orvalho da manhã, Glacia foi corrompida quando um estudante tentou aprisionar o frio em um frasco. Agora, ela protege o Pico de Cristal, acreditando que qualquer estranho é um ladrão de essência ártica.", env:"env-glacia", phrases:["Você vai congelar!", "Minha neve será seu túmulo.", "Sinta o abraço gélido.", "O inverno não perdoa.", "Congele onde está!", "Sua alma será gelo.", "A nevasca te cegará.", "Protegerei o Pico!"], missPhrases:["Sua mente congelou?", "Está tremendo?", "Tão frágil...", "Errou de novo?"] },
-            { n:"Thalros", title:"O Titã de Pedra", file:"golem_pedra.png", color:"#d35400", lore:"Thalros não foi construído para lutar, mas para servir de biblioteca viva para as primeiras runas de proteção. Com o tempo, o musgo cobriu suas escrituras e ele esqueceu os comandos de desativação. Ele esmaga qualquer um que considere uma ameaça ao conhecimento antigo.", env:"env-thalros", phrases:["Esmagar intruso!", "Sua magia é fraca contra rocha.", "Volte ao pó!", "Acesso negado.", "Runa de proteção ativa.", "Você é frágil.", "A montanha não se move.", "Intruso detectado."], missPhrases:["Cabeça dura.", "Não aprende?", "Fraco.", "Esmagar erro."] },
-            { n:"Umbra", title:"O Eco do Abismo", file:"espectro_sombras.png", color:"#8e44ad", lore:"Umbra é a amálgama dos medos deixados para trás por alunos que falharam. Ela não possui forma física constante, habitando as sombras dos corredores proibidos e alimentando-se da hesitação de quem ousa atravessá-los.", env:"env-umbra", phrases:["Seu medo tem cheiro doce...", "Abrace a escuridão.", "Não há luz aqui.", "Você está sozinho...", "A luz está morrendo.", "Seus pesadelos são reais.", "Junte-se ao vazio.", "Ninguém ouvirá seus gritos."], missPhrases:["O medo cega.", "Sua mente falha.", "Desista.", "Perdido..."] },
-            { n:"Ferrum", title:"O Golem de Ferro", file:"gargula_ferro.png", color:"#7f8c8d", lore:"Forjado durante a Grande Guerra Mágica para ser indestrutível. Ele é uma máquina de guerra movida por um feitiço de sangue que o obriga a guardar o portão principal até que seu mestre — morto há séculos — o dispense.", env:"env-ferrum", phrases:["Extermínio: Ativado.", "Carne é fraca. Aço é eterno.", "Eliminar intruso.", "Protocolo de defesa.", "Sem misericórdia.", "Alvo travado.", "Sua magia falhará.", "O portão permanece fechado."], missPhrases:["Ineficiente.", "Falha detectada.", "Erro.", "Recalculando..."] },
-            { n:"Solari", title:"A Fênix Renascida", file:"fenix_fogo.png", color:"#e67e22", lore:"Solari surge apenas quando a magia da academia está instável. Sua luz é tão intensa que pode cegar os impuros. Para os heróis, derrotá-la não é um ato de violência, mas um teste de resistência ao calor absoluto.", env:"env-solari", phrases:["Queime na verdade!", "O fogo purifica.", "Cinzas às cinzas.", "A chama eterna!", "Não há sombra sob minha luz.", "Renascerei das suas cinzas.", "O calor é insuportável?", "Purificação iminente."], missPhrases:["A luz ofusca?", "Cego?", "Tente focar.", "Queime seu erro."] },
-            { n:"Aurelius", title:"O Dragão da Ganância", file:"dragao_dourado.png", color:"#f1c40f", lore:"Um dragão que se apaixonou pelos tesouros da escola. A magia acumulada fundiu o ouro de sua toca diretamente em suas escamas. Ele vê cada item do seu inventário como uma joia que deve pertencer a ele.", env:"env-aurelius", phrases:["Meu tesouro!", "Vou derreter sua armadura.", "Ladrãozinho!", "Tudo o que brilha é meu.", "Não toque no meu ouro!", "Você pagará com a vida.", "Ganância é virtude.", "Vou te transformar em estátua dourada."], missPhrases:["Não toque!", "Tolo.", "Isso não é seu.", "Mãos desajeitadas."] },
-            { n:"Malakor", title:"O Feiticeiro Sombrio", file:"feiticeiro_trevas.png", color:"#2c3e50", lore:"O maior vilão da história da academia. Malakor foi o diretor mais brilhante, mas sua obsessão pela imortalidade o corrompeu. Agora ele é uma casca de poder arcano, drenando a magia da ilha para sustentar sua existência.", env:"env-malakor", phrases:["Eu vi a verdade.", "Sua magia é patética.", "Curve-se!", "Eu sou o diretor eterno!", "Conhecimento proibido.", "Sua mente é fraca.", "A morte é apenas o começo.", "Testemunhe o verdadeiro poder."], missPhrases:["Patético.", "Mente fraca.", "Desapontador.", "Estude mais."] },
-            { n:"Sertis", title:"A Serpente do Veneno", file:"basilisco.png", color:"#27ae60", lore:"Nos esgotos, o descarte de poções falhas criou Sertis. Esta serpente colossal sofreu mutações químicas, desenvolvendo um veneno que não apenas mata o corpo, mas corrompe a própria mana da vítima.", env:"env-sertis", phrases:["Ssssilêncio...", "Sinta o veneno.", "Não olhe meus olhos.", "O veneno corre...", "Sssufocante...", "Apodreça.", "Minhas presas te acharam.", "Tóxico..."], missPhrases:["Confuso?", "Tonto...", "O veneno age.", "Sssseu fim..."] },
-            { n:"Trion", title:"A Quimera Caótica", file:"quimera.png", color:"#c0392b", lore:"Um experimento de fusão falho. Trion possui três mentes em um corpo, cada uma lutando pelo controle. O leão ruge por força, o lobo por instinto e a serpente por malícia. Seus ataques são imprevisíveis.", env:"env-trion", phrases:["Rugido! Uivo! Sibilado!", "Caos encarnado!", "Despedaçar!", "Três mentes, um propósito!", "A presa foge!", "Caçar! Matar! Devorar!", "Qual cabeça te comerá?", "Instinto puro!"], missPhrases:["Perdido?", "Qual deles?", "Errado!", "Presa fácil."] },
-            { n:"Gaiaos", title:"O Espírito da Terra", file:"elemental_terra.png", color:"#795548", lore:"Gaiaos é a própria ilha se levantando contra os magos. Ele sente a dor da mineração de cristais e vê a academia como um parasita. Ele representa a fúria final da natureza contra a manipulação mágica.", env:"env-gaiaos", phrases:["A natureza cobra.", "Retorne ao solo!", "Fúria antiga.", "A ilha sangra.", "Magos são parasitas.", "Sinta o peso do mundo.", "Raízes te prenderão.", "A terra reclama o que é dela."], missPhrases:["Perdido?", "A terra rejeita.", "Saia!", "Tropeçou?"] }
+            { n:"Glacia", title:"A Sentinela do Inverno", file:"fada_gelo.png", color:"#00d2ff", lore:"Antigamente uma fada que trazia o orvalho da manhã, Glacia foi corrompida quando um estudante tentou aprisionar o frio em um frasco. Agora, ela protege o Pico de Cristal, acreditando que qualquer estranho é um ladrão de essência ártica.", env:"env-glacia", phrases:["O zero absoluto se aproxima.", "Sinta a mordida do inverno eterno.", "Cristais de gelo perfuram a alma.", "A nevasca sussurra seu fim.", "Nem o fogo resiste ao meu toque.", "Durma sob o manto branco.", "Sua magia treme de frio?", "O Pico de Cristal não perdoa."], missPhrases:["Seus dedos congelaram?", "A frieza entorpece sua mente.", "Tão lento quanto uma geleira.", "O gelo reflete sua falha."] },
+            { n:"Thalros", title:"O Titã de Pedra", file:"golem_pedra.png", color:"#d35400", lore:"Thalros não foi construído para lutar, mas para servir de biblioteca viva para as primeiras runas de proteção. Com o tempo, o musgo cobriu suas escrituras e ele esqueceu os comandos de desativação. Ele esmaga qualquer um que considere uma ameaça ao conhecimento antigo.", env:"env-thalros", phrases:["A rocha é eterna, você é efêmero.", "Minhas runas brilham com fúria.", "O peso da montanha cairá sobre ti.", "Conhecimento antigo, defesa impenetrável.", "Você não passará pela muralha viva.", "Sinta o tremor da terra.", "Sou o guardião das eras.", "Pedra não sangra, mago."], missPhrases:["Sua magia ricocheteia.", "Duro como pedra, não?", "Tente quebrar uma montanha.", "Fútil contra a rocha."] },
+            { n:"Umbra", title:"O Eco do Abismo", file:"espectro_sombras.png", color:"#8e44ad", lore:"Umbra é a amálgama dos medos deixados para trás por alunos que falharam. Ela não possui forma física constante, habitando as sombras dos corredores proibidos e alimentando-se da hesitação de quem ousa atravessá-los.", env:"env-umbra", phrases:["A luz projeta sombras, e eu sou todas elas.", "O abismo olha de volta para você.", "Seus segredos alimentam minha força.", "Não há onde se esconder na escuridão.", "Abrace o silêncio eterno.", "Sua coragem se desfaz como fumaça.", "Eu sou o pesadelo que você esqueceu.", "A escuridão consome tudo."], missPhrases:["Tateando no escuro?", "O medo te cegou?", "Você luta contra o nada.", "A sombra desviou seu golpe."] },
+            { n:"Ferrum", title:"O Golem de Ferro", file:"gargula_ferro.png", color:"#7f8c8d", lore:"Forjado durante a Grande Guerra Mágica para ser indestrutível. Ele é uma máquina de guerra movida por um feitiço de sangue que o obriga a guardar o portão principal até que seu mestre — morto há séculos — o dispense.", env:"env-ferrum", phrases:["Protocolo Arcano: Aniquilação.", "Aço forjado em sangue mágico.", "Sua magia não penetra minha blindagem.", "O Portão permanece selado.", "Engrenagens da guerra giram novamente.", "Resistência é ilógica.", "Ferro frio anula sua feitiçaria.", "Sentinela eterno, vigilância constante."], missPhrases:["Cálculo incorreto.", "Blindagem intacta.", "Erro de execução.", "Sua lógica falhou."] },
+            { n:"Solari", title:"A Fênix Renascida", file:"fenix_fogo.png", color:"#e67e22", lore:"Solari surge apenas quando a magia da academia está instável. Sua luz é tão intensa que pode cegar os impuros. Para os heróis, derrotá-la não é um ato de violência, mas um teste de resistência ao calor absoluto.", env:"env-solari", phrases:["O sol nasce para julgar.", "Minhas chamas purificam a corrupção.", "Cinzas são o destino dos impuros.", "O calor da criação e da destruição.", "Renascerei quantas vezes for preciso.", "Não ouse olhar diretamente para a luz.", "A chama sagrada não se apaga.", "Sinta o ardor da justiça."], missPhrases:["Ofuscado pela glória?", "O calor te confunde?", "Queimou os dedos?", "A luz revelou seu erro."] },
+            { n:"Aurelius", title:"O Dragão da Ganância", file:"dragao_dourado.png", color:"#f1c40f", lore:"Um dragão que se apaixonou pelos tesouros da escola. A magia acumulada fundiu o ouro de sua toca diretamente em suas escamas. Ele vê cada item do seu inventário como uma joia que deve pertencer a ele.", env:"env-aurelius", phrases:["Sua ganância não supera a minha.", "Ouro fundido corre em minhas veias.", "Você é apenas mais uma joia para minha coleção.", "O brilho deste tesouro será a última coisa que verá.", "Dragões não dividem.", "Pagará com sua vida pelo que tocou.", "Minhas escamas são impenetráveis como diamantes.", "Avareza é a lei deste covil."], missPhrases:["Mãos trêmulas de cobiça?", "O brilho te distraiu?", "Não toque no que é meu.", "Sua oferta foi rejeitada."] },
+            { n:"Malakor", title:"O Feiticeiro Sombrio", file:"feiticeiro_trevas.png", color:"#2c3e50", lore:"O maior vilão da história da academia. Malakor foi o diretor mais brilhante, mas sua obsessão pela imortalidade o corrompeu. Agora ele é uma casca de poder arcano, drenando a magia da ilha para sustentar sua existência.", env:"env-malakor", phrases:["A imortalidade exige sacrifícios, aprendiz.", "Você mal compreende a magia que empunha.", "Eu reescrevi as leis da natureza.", "Sua alma servirá bem aos meus propósitos.", "O conhecimento proibido é o único poder real.", "Curve-se diante do verdadeiro Diretor.", "A morte é apenas uma porta que eu tranquei.", "Sua mana é insignificante."], missPhrases:["Estudou pouco.", "Previsível demais.", "Falta-lhe ambição.", "Sua mente é um livro aberto."] },
+            { n:"Sertis", title:"A Serpente do Veneno", file:"basilisco.png", color:"#27ae60", lore:"Nos esgotos, o descarte de poções falhas criou Sertis. Esta serpente colossal sofreu mutações químicas, desenvolvendo um veneno que não apenas mata o corpo, mas corrompe a própria mana da vítima.", env:"env-sertis", phrases:["A toxina já está em suas veias...", "Sssinta a magia se dissolver...", "O pântano engole os fracos.", "Minhas presas gotejam o fim.", "Respire fundo... é seu último suspiro.", "A corrupção se espalha rápido.", "Ssssua visão está turva?", "O antídoto é a morte."], missPhrases:["O veneno te deixou lento?", "Ssscorregou?", "A tontura começou?", "Errou o alvo..."] },
+            { n:"Trion", title:"A Quimera Caótica", file:"quimera.png", color:"#c0392b", lore:"Um experimento de fusão falho. Trion possui três mentes em um corpo, cada uma lutando pelo controle. O leão ruge por força, o lobo por instinto e a serpente por malícia. Seus ataques são imprevisíveis.", env:"env-trion", phrases:["Três vontades, um único predador.", "O caos da natureza em perfeita forma.", "Qual de nós te devorará primeiro?", "A quimera não conhece piedade.", "Garras, presas e veneno... escolha seu fim.", "A harmonia da destruição.", "Nós somos a legião da besta.", "Não há escapatória da tríade."], missPhrases:["Confuso com tantas cabeças?", "Qual olho você mira?", "A besta foi mais rápida.", "Tropeçou nas próprias pernas?"] },
+            { n:"Gaiaos", title:"O Espírito da Terra", file:"elemental_terra.png", color:"#795548", lore:"Gaiaos é a própria ilha se levantando contra os magos. Ele sente a dor da mineração de cristais e vê a academia como um parasita. Ele representa a fúria final da natureza contra a manipulação mágica.", env:"env-gaiaos", phrases:["A ilha rejeita sua presença mágica.", "Raízes profundas esmagam pedras e ossos.", "O solo clama por vingança.", "Você é uma praga nesta terra sagrada.", "A natureza sempre retoma o que é dela.", "Sinta a fúria dos elementos primordiais.", "Cristais drenados, terra ferida... chega!", "Retorne ao ciclo da vida e morte."], missPhrases:["A terra tremeu sob você?", "Enredado nas raízes?", "O solo é instável para invasores.", "A natureza desviou seu foco."] }
         ];
 
-        const items = ['⚔️', '🛡️', '🧪', '📜', '💎', '💍', '🔮', '🗝️', '🌙', '🔥', '⚡', '👁️', '🕸️', '👑', '🩸', '⚖️'];
+        const items = [
+            'Espadas-Photoroom.png', 'Escudo-Photoroom.png', 'Poção-Photoroom.png', 'Mapa-Photoroom.png', 
+            'Cristal-Photoroom.png', 'Anel-Photoroom.png', 'GemaAzul-Photoroom.png', 'Chave-Photoroom.png', 
+            'Lua-Photoroom.png', 'Fenix-Photoroom.png', 'Raio-Photoroom.png', 'Olho-Photoroom.png', 
+            'Teia-Photoroom.png', 'Coroa-Photoroom.png', 'Sangue-Photoroom.png', 'Balança-Photoroom.png'
+        ];
         
+        // CORES DOS ITENS (GLOW PERSONALIZADO)
+        const itemColors = {
+            'Espadas-Photoroom.png': '#bdc3c7', // Prata
+            'Escudo-Photoroom.png': '#3498db', // Azul Aço
+            'Poção-Photoroom.png': '#2ecc71', // Verde Poção
+            'Mapa-Photoroom.png': '#d35400', // Laranja Mapa
+            'Cristal-Photoroom.png': '#00d2ff', // Ciano Cristal
+            'Anel-Photoroom.png': '#9b59b6', // Roxo Místico
+            'GemaAzul-Photoroom.png': '#0000ff', // Azul Profundo
+            'Chave-Photoroom.png': '#e67e22', // Bronze
+            'Lua-Photoroom.png': '#ecf0f1', // Branco Lunar
+            'Fenix-Photoroom.png': '#ff4500', // Vermelho Fogo
+            'Raio-Photoroom.png': '#f1c40f', // Amarelo Elétrico
+            'Olho-Photoroom.png': '#8e44ad', // Roxo Olho
+            'Teia-Photoroom.png': '#95a5a6', // Cinza Teia
+            'Coroa-Photoroom.png': '#ffd700', // Ouro Real
+            'Sangue-Photoroom.png': '#8b0000', // Vermelho Sangue
+            'Balança-Photoroom.png': '#f39c12' // Dourado Justiça
+        };
+
         // BASE DE DADOS EXPANDIDA (50 PERGUNTAS)
         const triviaDB = [
             // Geral & Alquimia
@@ -613,6 +724,23 @@
             {p:"Qual elemento de Solari?", o:["Gelo","Fogo","Sombra"], r:1},
             {p:"O que Umbra representa?", o:["Medo","Coragem","Sabedoria"], r:0},
             {p:"Gaiaos é o espírito de quê?", o:["Ar","Terra","Água"], r:1},
+            // Lore Expandida
+            {p:"O que Glacia protege com fervor?", o:["Pico de Cristal","Floresta Negra","O Portão"], r:0},
+            {p:"Qual era a função original de Glacia?", o:["Guerreira","Trazer Orvalho","Cozinheira"], r:1},
+            {p:"O que cobre as escrituras de Thalros?", o:["Ouro","Sangue","Musgo"], r:2},
+            {p:"Thalros é uma biblioteca viva de quê?", o:["Feitiços de Fogo","Runas de Proteção","História Antiga"], r:1},
+            {p:"Do que Umbra se alimenta?", o:["Carne","Medo e Hesitação","Luz"], r:1},
+            {p:"Onde Umbra costuma habitar?", o:["Corredores Proibidos","Jardim","Telhado"], r:0},
+            {p:"O que move o Golem Ferrum?", o:["Vapor","Eletricidade","Feitiço de Sangue"], r:2},
+            {p:"Quando Solari costuma aparecer?", o:["À Noite","Na Chuva","Instabilidade Mágica"], r:2},
+            {p:"O que se fundiu às escamas de Aurelius?", o:["Ferro","Ouro da Toca","Diamantes"], r:1},
+            {p:"O que Malakor busca obsessivamente?", o:["Paz","Imortalidade","Riqueza"], r:1},
+            {p:"O que criou a serpente Sertis?", o:["Magia Negra","Descarte de Poções","Um Dragão"], r:1},
+            {p:"O veneno de Sertis corrompe o quê?", o:["A Mana","A Armadura","A Espada"], r:0},
+            {p:"Quais animais formam Trion?", o:["Leão, Lobo, Serpente","Águia, Touro, Urso","Gato, Cão, Rato"], r:0},
+            {p:"O que as mentes de Trion disputam?", o:["Comida","Controle","Sono"], r:1},
+            {p:"O que Gaiaos considera os magos?", o:["Aliados","Deuses","Parasitas"], r:2},
+            {p:"O que causa dor a Gaiaos?", o:["Chuva","Vento","Mineração de Cristais"], r:2},
 
             // Mecânicas do Jogo
             {p:"Qual a cor da magia do caos neste jogo?", o:["Azul","Roxo","Verde"], r:1},
@@ -679,6 +807,7 @@
         
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, missCombo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
         let afkTimer, lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null, speechHideTimer = null, typewriterTimer = null;
+        let lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null, speechHideTimer = null, typewriterTimer = null;
 
         // --- 4. INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -695,12 +824,11 @@
             const vid = document.getElementById('intro-video'); vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
             gsap.to("#start-btn-intro", { opacity: 1, duration: 1, delay: 0.5 });
             document.addEventListener("mousemove", (e) => {
-                resetAFKTimer();
                 // Menu Particles
                 if(document.getElementById('screen-menu').style.display !== 'none' && cfg.part) {
                     createMenuParticle(e.clientX, e.clientY);
                 }
-            }); resetAFKTimer();
+            });
         });
 
         function initSlots() {
@@ -780,7 +908,7 @@
                 document.getElementById('screen-slots').style.display = 'none';
                 
                 navegar('screen-profile');
-                if(prof.nome!=="Aprendiz"){document.getElementById('profile-edit').style.display='none';document.getElementById('profile-dash').style.display='block';}else{document.getElementById('profile-edit').style.display='block';document.getElementById('profile-dash').style.display='none';}
+                if(prof.nome!=="Aprendiz"){ cancelarEdicao(); } else { editarPerfil(); }
                 
                 setTimeout(() => {
                     fade.classList.remove('fade-active');
@@ -830,7 +958,7 @@
                 const wrapper = document.createElement('div'); wrapper.className = 'card-wrapper';
                 const c = document.createElement('div'); c.className = 'card'; 
                 c.dataset.icon = icon; 
-                c.innerHTML = `<div class="face front">${icon}</div><div class="face back"></div>`;
+                c.innerHTML = `<div class="face front"><img src="Imagens/Icones/${icon}" alt="Item"></div><div class="face back"></div>`;
                 c.onclick = () => cardClick(c, icon); 
                 wrapper.appendChild(c);
                 UI.board.appendChild(wrapper);
@@ -853,6 +981,19 @@
                 travado = true; const [c1, c2] = cartas;
                 if(c1.v === c2.v) {
                     playS('match'); c1.el.classList.add('matched'); c2.el.classList.add('matched'); pares++; hp--; updateHP(); missCombo=0;
+                    
+                    // APLICA GLOW ESPECÍFICO
+                    const glowColor = itemColors[c1.v] || '#c5a028';
+                    [c1.el, c2.el].forEach(card => {
+                        const front = card.querySelector('.front');
+                        front.style.borderColor = glowColor;
+                        front.style.boxShadow = `0 0 30px ${glowColor}`;
+                    });
+
+                    // DISPARA PROJÉTIL ARCANO NO BOSS
+                    triggerArcaneShot(c1.el);
+                    setTimeout(() => triggerArcaneShot(c2.el), 150); // Pequeno delay para o segundo tiro
+
                     const now = Date.now(); if(now-lastMatch < 3000) { combo++; showCombo(combo); } else { combo=1; } lastMatch = now;
                     
                     // FURY SYSTEM
@@ -1036,7 +1177,7 @@
 
             chaosInternalTimer = setTimeout(() => {
                 const icons = validCards.map(c => c.dataset.icon).sort(() => Math.random() - 0.5);
-                validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerText = icons[i]; });
+                validCards.forEach((c, i) => { c.dataset.icon = icons[i]; c.querySelector('.front').innerHTML = `<img src="Imagens/Icones/${icons[i]}" alt="Item">`; });
                 
                 gsap.to(wrappers, { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, duration: 0.6, ease: "back.out(1.2)", stagger: 0.02, clearProps:"all", onComplete: () => { 
                     validCards.forEach(c => c.classList.remove('chaos-glow')); game.chaosActive = false; 
@@ -1140,13 +1281,25 @@
         function closeMagicAlert() { document.getElementById('magic-modal-content').classList.remove('show'); setTimeout(()=>document.getElementById('magic-alert-modal').style.display='none',300); }
         
         function abrirPerfilMenu(){ initSlots(); navegar('screen-slots'); }
-        function salvarPerfil(){const n=document.getElementById('prof-name-input').value;if(n)prof.nome=n;DB.setItem('aa_prof',JSON.stringify(prof));updateProfUI();abrirPerfilMenu();}
+        
+        function cancelarEdicao() {
+            document.getElementById('view-mode-btns').style.display = 'flex'; document.getElementById('edit-mode-btns').style.display = 'none';
+            document.getElementById('dash-name').style.display = 'block'; document.getElementById('prof-name-input').style.display = 'none';
+            document.getElementById('avatar-controls').style.display = 'none'; document.getElementById('frame-controls').style.display = 'none';
+            document.getElementById('dash-av-img').style.display = 'block'; document.getElementById('prof-av-edit').style.display = 'none';
+            updateProfUI();
+        }
+        function editarPerfil(){
+            document.getElementById('view-mode-btns').style.display = 'none'; document.getElementById('edit-mode-btns').style.display = 'flex';
+            document.getElementById('dash-name').style.display = 'none'; const inp = document.getElementById('prof-name-input'); inp.style.display = 'block'; inp.value = prof.nome;
+            document.getElementById('avatar-controls').style.display = 'flex'; document.getElementById('frame-controls').style.display = 'flex';
+            document.getElementById('dash-av-img').style.display = 'none'; document.getElementById('prof-av-edit').style.display = 'block';
+        }
         function salvarPerfil(){
             const n=document.getElementById('prof-name-input').value; if(n)prof.nome=n;
             if(!molduras[prof.frame].unlock(prof)) prof.frame = 0;
-            DB.setItem('aa_prof',JSON.stringify(prof)); updateProfUI(); abrirPerfilMenu();
+            DB.setItem('aa_prof',JSON.stringify(prof)); updateProfUI(); cancelarEdicao();
         }
-        function editarPerfil(){document.getElementById('profile-dash').style.display='none';document.getElementById('profile-edit').style.display='block';}
         function mudarAvatar(d){prof.av=(prof.av+d+avatares.length)%avatares.length;updateProfUI();}
         function mudarFrame(d){prof.frame=(prof.frame+d+molduras.length)%molduras.length;updateProfUI();}
         
@@ -1398,23 +1551,6 @@
             },t);
         }
         
-        function resetAFKTimer() {
-            clearTimeout(afkTimer);
-            afkTimer = setTimeout(triggerObliviate, 180000); // 3 minutos
-        }
-
-        function triggerObliviate() {
-            playS('chaos'); // Som mágico/caótico
-            const flash = document.createElement('div');
-            flash.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;opacity:0;pointer-events:none;";
-            document.body.appendChild(flash);
-            
-            gsap.to(flash, {opacity: 1, duration: 1.5, ease: "power2.in", onComplete: () => {
-                sairParaMenu(); // Reseta para o menu
-                gsap.to(flash, {opacity: 0, duration: 2, delay: 0.5, onComplete: () => flash.remove()});
-            }});
-        }
-        
         let achievementQueue = [];
         let isAchQueueRunning = false;
 
@@ -1649,6 +1785,33 @@
 
         function nextPage(){if(currentBookPage<14){currentBookPage++;renderBookPage(1);}} function prevPage(){if(currentBookPage>0){currentBookPage--;renderBookPage(-1);}}
         function getRewards(lvl) { let cardSkin = ''; let aura = ''; let hitEffect = 'boss-hit'; if (lvl >= 80) { cardSkin = 'card-skin-cosmic'; aura = 'aura-light'; hitEffect = 'boss-hit-void'; } else if (lvl >= 60) { cardSkin = 'card-skin-mythril'; aura = 'aura-shadow'; hitEffect = 'boss-hit-shock'; } else if (lvl >= 40) { cardSkin = 'card-skin-diamond'; aura = 'aura-lightning'; hitEffect = 'boss-hit-fire'; } else if (lvl >= 20) { cardSkin = 'card-skin-gold'; aura = 'aura-fire'; hitEffect = 'boss-hit-ice'; } else if (lvl >= 5) { cardSkin = 'card-skin-silver'; aura = 'aura-ice'; } return { cardSkin, aura, hitEffect }; }
+        
+        function triggerArcaneShot(el) {
+            const b = document.getElementById('boss-vis');
+            if(!b) return;
+            const rect = el.getBoundingClientRect();
+            const bRect = b.getBoundingClientRect();
+            
+            const p = document.createElement('div');
+            p.className = 'spell-projectile';
+            // Centraliza no elemento de origem
+            p.style.left = (rect.left + rect.width/2 - 25) + 'px';
+            p.style.top = (rect.top + rect.height/2 - 25) + 'px';
+            
+            // Se estiver em Fúria, o projétil fica vermelho/fogo
+            if(combo >= 3) { p.style.background = "radial-gradient(circle, #fff, #ff4500)"; p.style.boxShadow = "0 0 30px #ff4500, 0 0 60px #fff"; }
+
+            document.getElementById('vfx-container').appendChild(p);
+            
+            const destX = (bRect.left + bRect.width/2) - (rect.left + rect.width/2);
+            const destY = (bRect.top + bRect.height/2) - (rect.top + rect.height/2);
+            
+            gsap.to(p, {
+                x: destX, y: destY, scale: 0.5, duration: 0.4, ease: "power2.in",
+                onComplete: () => { p.remove(); const img = document.getElementById('boss-img-tag'); img.classList.remove('boss-hit'); void img.offsetWidth; img.classList.add('boss-hit'); createMagicBurst(bRect.left + bRect.width/2, bRect.top + bRect.height/2); }
+            });
+        }
+
         function createMagicBurst(x, y) { const container = document.getElementById('vfx-container'); const count = 12; const colors = ['#d4af37', '#00d2ff', '#ffffff']; for (let i = 0; i < count; i++) { const spark = document.createElement('div'); spark.classList.add('magic-spark'); spark.style.left = x + 'px'; spark.style.top = y + 'px'; spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; container.appendChild(spark); const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 60 + 30; const destX = Math.cos(angle) * distance; const destY = Math.sin(angle) * distance; gsap.to(spark, { x: destX, y: destY, opacity: 0, scale: 0, duration: 0.6, ease: "power2.out", onComplete: () => spark.remove() }); } }
         function initAudioVisualizer() { gsap.to(".magic-menu-card", { boxShadow: "0 15px 40px -5px rgba(0, 210, 255, 0.4)", borderColor: "rgba(0, 210, 255, 0.6)", duration: 2.5, repeat: -1, yoyo: true, stagger: { each: 0.3, from: "center" }, ease: "sine.inOut" }); }
         
