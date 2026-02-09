@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcane Academy [BETA] - Patch 2.0</title>
+    <title>Arcane Academy [DEMO] - Patch 2.1</title>
     
     <!-- Open Graph / Discord & WhatsApp Preview -->
-    <meta property="og:title" content="Arcane Academy [BETA] - Patch 2.0">
+    <meta property="og:title" content="Arcane Academy [DEMO] - Patch 2.1">
     <meta property="og:description" content="Embarque em uma jornada mágica, enfrente chefes lendários e complete seu Grimório neste jogo de memória e estratégia.">
     <meta property="og:image" content="Imagens/CapaGame.jpg">
     <meta property="og:type" content="website">
@@ -408,6 +408,9 @@
         .btn-save { border-color: var(--magic-blue); color: var(--magic-blue); }
         .btn-save:hover { background: var(--magic-blue); color: #fff; box-shadow: 0 0 20px var(--magic-blue); }
 
+        /* FOOTER INFO */
+        .game-footer { position: fixed; bottom: 5px; width: 100%; text-align: center; font-family: 'Cinzel', serif; font-size: 0.75rem; color: rgba(255, 255, 255, 0.25); z-index: 20005; pointer-events: none; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 1px 2px #000; }
+
         /* FIX: Settings Screen Z-Index & Interaction */
         #screen-settings { z-index: 20000 !important; }
         #screen-settings .panel-glass { pointer-events: auto !important; }
@@ -499,7 +502,7 @@
     <div id="screen-menu" class="screen">
         <div class="menu-overlay"></div>
         <div class="menu-card">
-            <div class="title-glow-fx"></div><div class="beta-badge">BETA PATCH 2.0</div>
+            <div class="title-glow-fx"></div><div class="beta-badge">DEMO PATCH 2.1</div>
             <div class="menu-options-container">
                 <div class="magic-menu-card disabled" id="btn-continue" onclick="playS('click'); continuarJogo()"><div class="card-icon">📜</div><div class="card-label" data-lang="menu_continue">Continuar</div></div>
                 <div class="magic-menu-card" onclick="playS('click'); novoJogo()"><div class="card-icon">✨</div><div class="card-label" data-lang="menu_play">Modo História</div></div>
@@ -635,9 +638,11 @@
 
     <div id="exit-screen"><div style="font-family:'Cinzel'; font-size:2rem; margin-bottom:20px; color:var(--accent-gold); text-shadow:0 0 10px var(--accent-gold);">Até logo, Mago.</div></div>
 
+    <div class="game-footer">Versão 1.1.0 | Arcane Academy &copy; Davi Eduardo</div>
+
     <script>
         /**
-         * Arcane Academy [BETA] - Patch 2.0
+         * Arcane Academy [DEMO] - Patch 2.1
          * Refatoração para Performance e Manutenibilidade
          */
 
