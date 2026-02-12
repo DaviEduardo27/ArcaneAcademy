@@ -17,12 +17,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     
     <style>
-        /* --- VISUAL CORE --- */
+        /* --- VISUAL CORE (AAA UPGRADE) --- */
         :root {
             --bg-deep: #050505; --accent-gold: #c5a028; --accent-glow: #ffd700; --danger-red: #8b0000;
             --magic-blue: #00a8cc; --combo-orange: #d35400; --chaos-purple: #6c3483; --panel-bg: rgba(5, 5, 8, 0.95);
             --paper-color: #e3dac9; --ink-color: #1a1a1a; --glass-dark: rgba(0, 0, 0, 0.9);
             --rew-silver: #bdc3c7; --rew-mythril: #1abc9c; --rew-cosmic: #8e44ad;
+            
+            /* AAA Palette Additions */
+            --mist-color: rgba(200, 220, 255, 0.06);
+            --shadow-dark: rgba(0, 0, 0, 0.75);
+            --cinematic-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            --gold-sheen: linear-gradient(120deg, transparent 30%, rgba(255, 215, 0, 0.4) 50%, transparent 70%);
+            --card-edge-highlight: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
         }
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; outline: none; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Cinzel', serif; color: #d0d0d0; cursor: default; }
@@ -30,7 +37,20 @@
         /* --- BACKGROUNDS --- */
         #dynamic-bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background-size: cover; background-position: center; transition: opacity 1s ease, filter 1s ease; opacity: 0.6; filter: contrast(1.1) saturate(0.9); }
         .env-default { background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%); }
-        .env-glacia{background-image:url('Imagens/Fundos/bg_glacia.jpg');} .env-thalros{background-image:url('Imagens/Fundos/bg_thalros.jpg');} 
+
+        /* PHASE 1 & 5: CINEMATIC LIGHTING & POST-PROCESSING */
+        #cinematic-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9000; mix-blend-mode: overlay; background-image: var(--cinematic-grain); opacity: 0.4; }
+        #vignette-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8999; background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%); opacity: 0.8; transition: opacity 0.5s; }
+        #lighting-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 60%); mix-blend-mode: screen; }
+        
+        /* PHASE 2: VOLUMETRIC ATMOSPHERE */
+        .dust-particle { position: absolute; background: #fff; border-radius: 50%; opacity: 0.3; pointer-events: none; animation: floatDust 10s infinite linear; box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        @keyframes floatDust { 0% { transform: translateY(0) translateX(0); opacity: 0; } 20% { opacity: 0.5; } 80% { opacity: 0.5; } 100% { transform: translateY(-100px) translateX(50px); opacity: 0; } }
+        
+        /* Parallax Layers */
+        .env-glacia{background-image:url('Imagens/Fundos/bg_glacia.jpg');}
+        .env-thalros{background-image:url('Imagens/Fundos/bg_thalros.jpg');}
+
         .env-umbra{background-image:url('Imagens/Fundos/bg_umbra.jpg');} .env-ferrum{background-image:url('Imagens/Fundos/bg_ferrum.jpg');} 
         .env-solari{background-image:url('Imagens/Fundos/bg_solari.jpg');} .env-aurelius{background-image:url('Imagens/Fundos/bg_aurelius.jpg');} 
         .env-malakor{background-image:url('Imagens/Fundos/bg_malakor.jpg');} .env-sertis{background-image:url('Imagens/Fundos/bg_sertis.jpg');} 
@@ -38,6 +58,7 @@
 
         /* --- VFX --- */
         #magic-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
         #combo-pulse-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 0%, #000 100%); z-index: 2; transition: background 0.2s ease; pointer-events: none; mix-blend-mode: overlay; }
         #vfx-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
         .magic-spark { position: absolute; width: 8px; height: 8px; background: #fff; border-radius: 50%; box-shadow: 0 0 15px #fff, 0 0 30px var(--accent-gold); pointer-events: none; }
@@ -54,6 +75,23 @@
         #portal-canvas.active { opacity: 1; }
         
         /* Combo Breaker Crack */
+        
+        /* Fog Layer */
+        #fog-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, var(--mist-color) 80%);
+            z-index: 5; pointer-events: none;
+            animation: drift 150s linear infinite;
+            mix-blend-mode: soft-light;
+            opacity: 0.6;
+            filter: blur(2px);
+        }
+
+        @keyframes drift {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 500px; }
+        }
+
         #crack-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9500; pointer-events: none; opacity: 0; display: flex; align-items: center; justify-content: center; mix-blend-mode: overlay; }
         #crack-svg { width: 80%; height: 80%; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
         .crack-path { fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
@@ -133,6 +171,10 @@
             overflow: hidden;
         }
 
+        /* Animação de respiração (Cinematic Camera Effect) */
+        @keyframes breathe { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        #screen-menu .menu-card { animation: breathe 8s infinite ease-in-out; }
+
         /* Inner Border & Accents */
         .magic-menu-card::after { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; border: 1px solid rgba(197, 160, 40, 0.15); pointer-events: none; transition: all 0.4s ease; }
         .magic-menu-card::before { 
@@ -145,6 +187,29 @@
             background-size: 20px 20px; background-repeat: no-repeat; opacity: 0.2; transition: opacity 0.4s ease;
         }
         
+        /* Light Sweep (Menu Card Hover) */
+        .magic-menu-card .light-sweep {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease-out;
+        }
+
+        .magic-menu-card:hover .light-sweep { transform: translateX(100%); }
+
+        /* Polished Gold Border (Reflective) */
+        .magic-menu-card .gold-border {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+            border: 1px solid var(--accent-gold);
+            box-shadow:
+                0 0 4px rgba(197, 160, 40, 0.6),
+                inset 0 0 4px rgba(197, 160, 40, 0.4),
+                0 0 8px rgba(0, 0, 0, 0.5); /* Outer glow */
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+        .magic-menu-card:hover .gold-border { opacity: 1; }
+
         /* Variação na animação para parecer orgânico */
         .magic-menu-card:nth-child(odd) { animation-duration: 5.5s; animation-delay: 0.5s; }
         .magic-menu-card:nth-child(even) { animation-duration: 4.8s; animation-delay: 0s; }
@@ -165,6 +230,29 @@
         .magic-menu-card:hover::before { opacity: 1; }
         .magic-menu-card:hover .card-icon { color: #fff; filter: drop-shadow(0 0 20px var(--magic-blue)); transform: scale(1.1); }
         .magic-menu-card:hover .card-label { color: var(--accent-gold); text-shadow: 0 0 15px rgba(197, 160, 40, 0.6); }
+
+        /* Reflected Card System (AAA Card Design) */
+        .card-wrapper:hover .card { transform: translateY(-15px); }
+        .face.back {
+            background: #1a1a1a;
+            background-image: url('Imagens/icone.png');
+            background-size: 60%;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 2px solid #444;
+            color: #444;
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Suaviza a transição */
+            transform: translateY(0); /* Garante que comece na posição original */
+            will-change: transform, box-shadow; /* Otimiza a performance */
+        }
+
+        .card-wrapper:hover .face.back {
+            transform: translateY(-8px); /* Levemente levanta no hover */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.9), inset 0 0 15px rgba(255,255,255,0.1); /* Sombra mais forte e brilho interno */
+        }
+
+        /* === CARD SKINS === */
+
         .magic-menu-card:active { transform: translateY(-25px) scale(0.95); filter: brightness(1.3); }
         .magic-menu-card.disabled { opacity: 0.3; filter: grayscale(1); pointer-events: none; display:none; }
 
@@ -173,6 +261,7 @@
         #btn-infinite:hover { border-color: var(--chaos-purple); } #btn-infinite:hover::after { border-color: var(--chaos-purple); } #btn-infinite:hover .card-icon { filter: drop-shadow(0 0 15px var(--chaos-purple)); } #btn-infinite:hover .card-label { color: var(--chaos-purple); text-shadow: 0 0 10px var(--chaos-purple); }
 
         .nav-zone { display: none; }
+
 
         /* --- UI & HUD --- */
         .panel-glass { background: linear-gradient(135deg, #1a1a1a, #050505); border: 2px solid var(--accent-gold); padding: 50px; border-radius: 8px; text-align: center; width: 600px; max-width: 90%; box-shadow: 0 0 100px rgba(0,0,0,0.9); }
@@ -188,13 +277,19 @@
         .val-gold { color: var(--accent-gold); font-weight:bold; } .val-blue { color: var(--magic-blue); font-weight:bold; }
         
         .game-area { display: flex; align-items: center; justify-content: center; gap: 80px; width: 100%; height: 100%; transform-style: preserve-3d; z-index: 10; }
+
         .boss-panel { width: 350px; text-align: center; position: relative; }
-        .boss-img { width: 300px; height: 300px; margin: 0 auto; animation: float 5s infinite ease-in-out; } .boss-img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); }
+        /* PHASE 4: BOSS CINEMATIC PRESENCE */
+        .boss-img { width: 300px; height: 300px; margin: 0 auto; animation: float 5s infinite ease-in-out; position: relative; z-index: 2; } 
+        .boss-img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); transition: filter 0.3s; }
+        .boss-aura-fx { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 350px; height: 350px; background: radial-gradient(circle, var(--boss-color, rgba(255,0,0,0.2)) 0%, transparent 70%); z-index: 1; opacity: 0.6; animation: auraPulse 3s infinite ease-in-out; mix-blend-mode: screen; pointer-events: none; }
+        @keyframes auraPulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.7; } }
         
         #boss-n { font-size: 2.2rem; margin-top: 15px; font-weight: bold; color: #fff; text-shadow: 0 0 15px var(--accent-gold); letter-spacing: 4px; font-family: 'Cinzel'; text-transform: uppercase; border-bottom: 2px solid var(--accent-gold); padding-bottom: 5px; display: inline-block; }
         
-        .boss-hp-bg { width: 100%; height: 18px; background: #0a0a0a; margin-top: 20px; border-radius: 10px; border: 2px solid var(--accent-gold); box-shadow: 0 0 20px rgba(0,0,0,0.8); position: relative; overflow: hidden; }
-        .boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #8b0000, #e74c3c); transition: 0.3s; box-shadow: 0 0 15px #e74c3c; position: relative; }
+        .boss-hp-bg { width: 100%; height: 22px; background: #0a0a0a; margin-top: 20px; border-radius: 4px; border: 1px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.8); position: relative; overflow: hidden; }
+        .boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #500, #f00, #500); background-size: 200% 100%; animation: bloodFlow 2s infinite linear; transition: 0.3s; box-shadow: 0 0 15px #e74c3c; position: relative; }
+        @keyframes bloodFlow { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
         .boss-hp-fill::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%; background: rgba(255,255,255,0.2); border-radius: 10px 10px 0 0; }
         .boss-blood { position: absolute; width: 6px; height: 6px; background: #8b0000; border-radius: 50%; pointer-events: none; z-index: 20; box-shadow: 0 0 5px #ff0000; }
         .boss-speech-bubble { position: absolute; top: -120px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 20px 25px; border-radius: 8px; font-family: 'MedievalSharp'; font-size: 1.1rem; width: 280px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); opacity: 0; pointer-events:none; transition: opacity 0.5s; border: 3px solid #000; }
@@ -208,31 +303,48 @@
         .aura-light .avatar-frame { border-color: #fff; box-shadow: 0 0 40px #fff; }
         .boss-hit { animation: hitBasic 0.2s; } @keyframes hitBasic { 0%{filter:brightness(10) contrast(2);} 100%{filter:brightness(1);} }
 
-        /* CARDS - HOTFIX FLIP & BACK */
+        /* PHASE 3: CARD MATERIAL SHADER SIMULATION */
         .card-grid { display: grid; gap: 20px; perspective: 1200px; z-index: 10; } .grid-4 { grid-template-columns: repeat(4, 1fr); } .grid-5 { grid-template-columns: repeat(5, 1fr); } .grid-6 { grid-template-columns: repeat(6, 1fr); }
-        .card-wrapper { width: 100px; height: 140px; position: relative; animation: cardFloat 3s infinite alternate ease-in-out; transition: transform 0.3s; }
-        .card-wrapper:hover { transform: translateY(-10px) scale(1.05); z-index: 50; }
+        .card-wrapper { width: 100px; height: 140px; position: relative; animation: cardFloat 4s infinite alternate ease-in-out; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); transform-style: preserve-3d; }
+        .card-wrapper:hover { transform: translateY(-15px) scale(1.05) rotateX(5deg); z-index: 50; }
         
         .card { width: 100%; height: 100%; cursor: pointer; position: relative; transform-style: preserve-3d; transition: z-index 0.3s; }
         /* OBS: Transição via GSAP no JS, removida do CSS para não conflitar */
         @keyframes cardFloat { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
         
-        .face { width: 100%; height: 100%; position: absolute; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem; backface-visibility: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.8); overflow: hidden; }
-        .front { background: #e0e0e0; transform: rotateY(180deg); border: 2px solid #555; color: #222; transition: border-color 0.3s, box-shadow 0.3s; }
+        .face { 
+            width: 100%; height: 100%; position: absolute; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 3rem; 
+            backface-visibility: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.9); overflow: hidden; 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .front { 
+            background: linear-gradient(135deg, #2c3e50, #000); 
+            transform: rotateY(180deg); 
+            box-shadow: var(--card-edge-highlight), 0 10px 30px rgba(0,0,0,0.8);
+            transition: border-color 0.3s, box-shadow 0.3s; 
+        }
+        /* Simulated Metallic Shine on Front */
+        .front::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: var(--gold-sheen); transform: rotate(45deg) translateY(-100%); transition: transform 0.5s; pointer-events: none; opacity: 0.3; }
+        .card-wrapper:hover .front::after { transform: rotate(45deg) translateY(100%); }
+
         .face.front img { width: 150%; height: 150%; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); pointer-events: none; }
         
         /* CORREÇÃO DO VERSO (ICONE.PNG) */
         .back { 
-            background: #1a1a1a; 
+            background: radial-gradient(circle, #2a2a2a, #0a0a0a); 
             background-image: url('Imagens/icone.png');
             background-size: 60%;
             background-position: center;
             background-repeat: no-repeat;
-            border: 2px solid #444; 
+            border: 1px solid #444; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
             color: #444; 
         }
         
-        .card.matched .front { border-color: #fff; box-shadow: 0 0 30px var(--accent-gold); }
+        .card.matched .front { border-color: #fff; box-shadow: 0 0 40px var(--accent-gold), inset 0 0 20px var(--accent-gold); animation: pulseMatch 1s infinite; }
+        @keyframes pulseMatch { 0% { filter: brightness(1); } 50% { filter: brightness(1.3); } 100% { filter: brightness(1); } }
+
         .card.chaos-glow { box-shadow: 0 0 50px var(--chaos-purple), inset 0 0 30px var(--chaos-purple); border: 2px solid var(--chaos-purple); animation: none; }
         
         /* Skins */
@@ -423,6 +535,8 @@
         <defs>
             <filter id="chromatic-aberration">
                 <feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" in="SourceGraphic" result="red"/>
+
+                
                 <feOffset in="red" dx="3" dy="0" result="red_offset"/>
                 <feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" in="SourceGraphic" result="green"/>
                 <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" in="SourceGraphic" result="blue"/>
@@ -441,8 +555,11 @@
     </svg>
 
     <div id="dynamic-bg-layer" class="env-default"></div>
+    <div id="lighting-layer"></div>
+    <div id="vignette-layer"></div>
+    <div id="cinematic-overlay"></div>
     <canvas id="magic-canvas"></canvas>
-    <div id="vfx-container"></div>
+    <div id="vfx-container"><!-- VFX Spawn Area --></div>
     <div id="fx-overlay"></div>
     <div id="combo-pulse-layer"></div>
     <div id="time-warning-layer"></div>
@@ -450,7 +567,7 @@
     <div id="mist-layer"></div>
     <canvas id="portal-canvas"></canvas>
     <div id="black-hole"></div>
-    
+
     <div id="crack-fx">
         <svg id="crack-svg" viewBox="0 0 500 500"><path class="crack-path" d="M250 250 L300 150 L320 100 M250 250 L150 200 L100 180 M250 250 L200 350 L180 400 M250 250 L350 300 L400 320 M250 250 L280 220 L350 200 M250 250 L220 280 L150 300"></path></svg>
     </div>
@@ -523,6 +640,7 @@
         <div class="game-area">
             <div class="boss-panel">
                 <div id="boss-speech" class="boss-speech-bubble">...</div>
+                <div class="boss-aura-fx"></div>
                 <div id="boss-vis" class="boss-img"><img id="boss-img-tag" src="" alt="Boss"></div>
                 <div id="boss-n">BOSS</div>
                 <div class="boss-hp-bg"><div class="boss-hp-fill" id="hp-bar"></div></div>
@@ -979,11 +1097,92 @@
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, missCombo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
         let lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null, speechHideTimer = null, typewriterTimer = null;
     
+        // --- CINEMATIC CAMERA SYSTEM ---
+        const CameraSystem = {
+            el: null,
+            x: 0, y: 0, z: 0,
+            rotX: 0, rotY: 0, rotZ: 0,
+            baseZ: 0,
+            trauma: 0, // Shake intensity (0 to 1)
+            isUltra: false,
+            mouse: { x: 0, y: 0 },
+            
+            init() {
+                this.el = document.getElementById('camera-container');
+                
+                // Mouse Parallax Listener
+                document.addEventListener('mousemove', (e) => {
+                    const nx = (e.clientX / window.innerWidth) * 2 - 1;
+                    const ny = (e.clientY / window.innerHeight) * 2 - 1;
+                    gsap.to(this.mouse, { x: nx, y: ny, duration: 1, ease: "power2.out" });
+                });
+
+                // Idle Breathing Animation
+                gsap.to(this, { baseZ: 20, duration: 6, repeat: -1, yoyo: true, ease: "sine.inOut" });
+
+                // Main Camera Loop
+                gsap.ticker.add(this.update.bind(this));
+            },
+
+            update() {
+                if(!this.el) return;
+
+                // 1. Trauma Decay (Shake recovery)
+                this.trauma = Math.max(0, this.trauma - 0.02);
+                const shake = this.trauma * this.trauma; // Non-linear shake feel
+                
+                // 2. Calculate Offsets
+                const shakeX = (Math.random() * 2 - 1) * shake * 30;
+                const shakeY = (Math.random() * 2 - 1) * shake * 30;
+                const shakeZ = (Math.random() * 2 - 1) * shake * 10;
+                const shakeRot = (Math.random() * 2 - 1) * shake * 5;
+
+                // 3. Ultra Mode Instability
+                let ultraX = 0, ultraY = 0, ultraRot = 0;
+                if(this.isUltra) {
+                    const t = Date.now() * 0.002;
+                    ultraX = Math.sin(t) * 10;
+                    ultraY = Math.cos(t * 1.5) * 10;
+                    ultraRot = Math.sin(t * 0.5) * 2;
+                }
+
+                // 4. Parallax & Idle
+                const paraX = this.mouse.x * -15; // Inverse movement for depth
+                const paraY = this.mouse.y * -15;
+                const paraRotX = this.mouse.y * 2;
+                const paraRotY = this.mouse.x * -2;
+
+                // 5. Apply Transform
+                const tx = this.x + shakeX + ultraX + paraX;
+                const ty = this.y + shakeY + ultraY + paraY;
+                const tz = this.z + this.baseZ + shakeZ;
+                const rx = this.rotX + paraRotX + (shake * 10); // Impact tilts camera
+                const ry = this.rotY + paraRotY;
+                const rz = this.rotZ + shakeRot + ultraRot;
+
+                this.el.style.transform = `translate3d(${tx}px, ${ty}px, ${tz}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+            },
+
+            shake(intensity = 0.5) {
+                this.trauma = Math.min(1, this.trauma + intensity);
+            },
+
+            zoom(level, duration = 0.5) {
+                gsap.to(this, { z: level, duration: duration, ease: "power2.out" });
+            },
+
+            setUltraMode(active) {
+                this.isUltra = active;
+                if(active) document.body.classList.add('ultra-unstable');
+                else document.body.classList.remove('ultra-unstable');
+            }
+        };
 
         // --- 4. INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
             audioManager.init();
+            CameraSystem.init(); // Init Camera
             initWeatherSystem(); 
             initProfileData();
             updateProfUI(); 
@@ -1113,6 +1312,7 @@
             game.fase = f; UI.hud.fase.innerText = f; UI.hud.score.innerText = game.score; UI.board.innerHTML = '';
             let bIdx = (f-1)%bosses.length; if(game.infiniteMode) bIdx = Math.floor(Math.random()*bosses.length); currentBossIndex = bIdx; const b = bosses[bIdx];
             document.getElementById('boss-img-tag').src = AssetManager.getSrc(b.file); document.getElementById('boss-n').innerText = b.n; document.getElementById('boss-n').style.textShadow = "0 0 20px " + b.color; document.getElementById('dynamic-bg-layer').className = b.env;
+            document.querySelector('.boss-aura-fx').style.setProperty('--boss-color', b.color);
             
             let n = 16;
             if (game.ngPlus) n = 24;
@@ -1167,6 +1367,9 @@
                     // DISPARA PROJÉTIL ARCANO NO BOSS
                     triggerArcaneShot(c1.el);
                     setTimeout(() => triggerArcaneShot(c2.el), 150); // Pequeno delay para o segundo tiro
+                    
+                    // PHASE 3: IMPACT SHOCKWAVE
+                    CameraSystem.shake(0.4); // Cinematic Shake
 
                     const now = Date.now(); if(now-lastMatch < 3000) { combo++; showCombo(combo); } else { combo=1; } lastMatch = now;
                     
@@ -1174,12 +1377,14 @@
                     let isFury = combo >= 3;
                     if(isFury) {
                         UI.board.classList.add('fury-active');
+                        CameraSystem.setUltraMode(true); // Enable Ultra Mode on Fury
                         if(combo === 5) notificar("FÚRIA ARCANA ATIVADA!");
                     }
 
                     // Boss Shake & Flash FX
                     gsap.fromTo(".boss-hp-bg", {x:-5}, {x:5, duration:0.05, repeat:5, yoyo:true, clearProps:"x"});
                     gsap.fromTo("#hp-bar", {filter:"brightness(2)"}, {filter:"brightness(1)", duration:0.3, clearProps:"filter"});
+                    gsap.fromTo(".boss-img", {scale: 0.95}, {scale: 1, duration: 0.2, ease: "elastic.out(1, 0.3)"});
 
                     let pts = Math.floor(100*combo); 
                     if(isFury) pts *= 3; // Triplo de pontos na Fúria
@@ -1195,6 +1400,7 @@
                     if(missCombo >= 3) { triggerBossReaction('miss'); missCombo = 0; }
 
                     UI.board.classList.remove('fury-active');
+                    CameraSystem.setUltraMode(false); // Disable Ultra Mode
                     setTimeout(()=>{
                         gsap.to([c1.el, c2.el], {
                             rotateY: 0, duration: 0.4, ease: "power2.inOut",
@@ -1236,10 +1442,12 @@
             if(prof.xp >= prof.lvl*100 && prof.lvl < 100) { prof.xp=0; prof.lvl++; msg = `LEVEL UP! Nível ${prof.lvl}!`; checkAchievements('levelup'); triggerLevelUpFX(); }
             DB.setItem('aa_prof', JSON.stringify(prof)); updateProfUI();
             
+            CameraSystem.zoom(150, 2); // Cinematic Zoom on Win
             notificar(msg);
             playS('win');
             
             setTimeout(() => {
+                CameraSystem.zoom(0, 1); // Reset Zoom
                 transitionFase(game.fase+1);
             }, 3000);
         }
@@ -1337,6 +1545,7 @@
             const validCards = Array.from(document.querySelectorAll('.card:not(.flipped):not(.matched)')); if(validCards.length<2) return;
             const wrappers = validCards.map(c => c.parentElement);
             game.chaosActive = true; playS('chaos'); notificar("O Vazio embaralha o destino...");
+            CameraSystem.shake(0.8); // Heavy shake on Chaos
             validCards.forEach(c => c.classList.add('chaos-glow'));
             
             const bh = document.getElementById('black-hole');
@@ -1691,6 +1900,17 @@
             const c=document.getElementById('magic-canvas'); 
             const ctx=c.getContext('2d');
             c.width=window.innerWidth; c.height=window.innerHeight;
+
+            // PHASE 2: DUST PARTICLES
+            const dustContainer = document.getElementById('vfx-container');
+            for(let i=0; i<20; i++) {
+                const d = document.createElement('div');
+                d.className = 'dust-particle';
+                d.style.left = Math.random()*100 + '%'; d.style.top = Math.random()*100 + '%';
+                d.style.width = Math.random()*3 + 'px'; d.style.height = d.style.width;
+                d.style.animationDuration = (10 + Math.random()*20) + 's';
+                dustContainer.appendChild(d);
+            }
             
             const hour = new Date().getHours();
             const isNight = hour >= 18 || hour < 6;
