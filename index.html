@@ -144,14 +144,109 @@
 
         /* --- MENU --- */
         #screen-menu { 
-            background: url('Imagens/CapaGame.jpg') no-repeat center center;
-            background-size: cover; 
+            position: relative;
+            overflow: hidden;
+            background: #020712;
             width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
         }
-        .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10, 16, 26, 0.3) 0%, rgba(0, 0, 0, 0.9) 100%); z-index: 1; pointer-events: none; }
+        #menu-starfield-layer,
+        #menu-starfield-layer-2,
+        #menu-meteor-layer,
+        #menu-capa-layer,
+        #menu-capa-vignette,
+        .menu-capa-fog {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        #menu-starfield-layer {
+            z-index: 0;
+            background-color: #020712;
+            background-repeat: repeat;
+            background-size: cover;
+            filter: brightness(0.82) saturate(1.1);
+            transform: scale(1.08);
+            animation: menuStarDriftA 180s linear infinite;
+        }
+        #menu-starfield-layer-2 {
+            z-index: 0;
+            background-repeat: repeat;
+            background-size: cover;
+            mix-blend-mode: screen;
+            opacity: 0.35;
+            transform: scale(1.12);
+            animation: menuStarDriftB 260s linear infinite;
+        }
+        @keyframes menuStarDriftA {
+            0% { background-position: 0 0; }
+            100% { background-position: 640px 340px; }
+        }
+        @keyframes menuStarDriftB {
+            0% { background-position: 0 0; }
+            100% { background-position: -420px 240px; }
+        }
+        #menu-meteor-layer {
+            z-index: 1;
+            overflow: hidden;
+        }
+        .menu-meteor {
+            position: absolute;
+            height: 2px;
+            width: var(--meteor-size, 180px);
+            background: linear-gradient(90deg, rgba(130, 220, 255, 0), rgba(130, 220, 255, 0.55), rgba(255, 255, 255, 0.96));
+            border-radius: 999px;
+            opacity: 0;
+            filter: blur(0.2px) drop-shadow(0 0 7px rgba(124, 205, 255, 0.8));
+            transform-origin: center;
+            animation: menuMeteor var(--meteor-duration, 24s) linear var(--meteor-delay, 0s) infinite;
+        }
+        @keyframes menuMeteor {
+            0%, 62%, 100% { opacity: 0; transform: translate3d(0, 0, 0) rotate(var(--meteor-angle, -18deg)); }
+            66% { opacity: 0.62; }
+            79% { opacity: 0; transform: translate3d(var(--meteor-travel-x, 35vw), var(--meteor-travel-y, 18vh), 0) rotate(var(--meteor-angle, -18deg)); }
+        }
+        #menu-capa-layer {
+            z-index: 2;
+            background: url('Imagens/CapaGame.jpg') no-repeat center center;
+            background-size: contain;
+            filter: saturate(1.04) contrast(1.02);
+        }
+        #menu-capa-vignette {
+            z-index: 2;
+            background:
+                radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 41%, rgba(9, 24, 46, 0.24) 70%, rgba(2, 9, 18, 0.58) 100%);
+            opacity: 0.8;
+        }
+        .menu-capa-fog {
+            z-index: 2;
+            opacity: 0;
+            filter: blur(16px);
+            transition: opacity 0.35s ease;
+            will-change: left, top, width, height, opacity;
+        }
+        #menu-capa-fog-left {
+            background: linear-gradient(90deg, rgba(4, 10, 20, 0.9) 0%, rgba(14, 44, 80, 0.62) 45%, rgba(65, 145, 210, 0.22) 78%, rgba(65, 145, 210, 0) 100%);
+        }
+        #menu-capa-fog-right {
+            background: linear-gradient(270deg, rgba(4, 10, 20, 0.9) 0%, rgba(14, 44, 80, 0.62) 45%, rgba(65, 145, 210, 0.22) 78%, rgba(65, 145, 210, 0) 100%);
+        }
+        #menu-capa-fog-top {
+            background: linear-gradient(180deg, rgba(4, 10, 20, 0.85) 0%, rgba(10, 32, 62, 0.56) 44%, rgba(72, 158, 224, 0.18) 78%, rgba(72, 158, 224, 0) 100%);
+        }
+        #menu-capa-fog-bottom {
+            background: linear-gradient(0deg, rgba(4, 10, 20, 0.92) 0%, rgba(10, 32, 62, 0.58) 44%, rgba(72, 158, 224, 0.2) 78%, rgba(72, 158, 224, 0) 100%);
+        }
+        .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10, 16, 26, 0.2) 0%, rgba(0, 0, 0, 0.76) 100%); z-index: 3; pointer-events: none; }
         
-        .menu-card { width: 100%; height: 100%; background: transparent; border: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; z-index: 2; padding-top: 60px; }
+        .menu-card { width: 100%; height: 100%; background: transparent; border: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; z-index: 4; padding-top: 60px; }
+        @media (prefers-reduced-motion: reduce) {
+            #menu-starfield-layer,
+            #menu-starfield-layer-2,
+            .menu-meteor {
+                animation: none !important;
+            }
+        }
         .title-glow-fx { position: absolute; top: 0; width: 100%; height: 40%; background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent); pointer-events: none; z-index: 5; }
         .beta-badge { position: absolute; top: 30px; right: 40px; font-family: 'Cinzel'; font-size: 1.2rem; font-weight: bold; color: rgba(255, 255, 255, 0.8); letter-spacing: 4px; z-index: 100; text-shadow: 0 0 10px rgba(0, 168, 204, 0.8); }
         
@@ -2603,6 +2698,15 @@
     </div>
 
     <div id="screen-menu" class="screen">
+        <div id="menu-starfield-layer" aria-hidden="true"></div>
+        <div id="menu-starfield-layer-2" aria-hidden="true"></div>
+        <div id="menu-meteor-layer" aria-hidden="true"></div>
+        <div id="menu-capa-layer" aria-hidden="true"></div>
+        <div id="menu-capa-vignette" aria-hidden="true"></div>
+        <div id="menu-capa-fog-left" class="menu-capa-fog" aria-hidden="true"></div>
+        <div id="menu-capa-fog-right" class="menu-capa-fog" aria-hidden="true"></div>
+        <div id="menu-capa-fog-top" class="menu-capa-fog" aria-hidden="true"></div>
+        <div id="menu-capa-fog-bottom" class="menu-capa-fog" aria-hidden="true"></div>
         <div class="menu-overlay"></div>
         <div class="menu-card">
             <div class="coin-display" style="position: absolute; top: 30px; left: 40px; z-index: 200;"><span class="coin-icon">🪙</span> <span id="menu-coins">0</span></div>
@@ -2827,6 +2931,9 @@
             switch(newState) {
                 case UI_STATES.MAIN_MENU:
                     _renderScreen('screen-menu');
+                    if (typeof MenuBackgroundFX !== 'undefined' && MenuBackgroundFX && typeof MenuBackgroundFX.refresh === 'function') {
+                        MenuBackgroundFX.refresh();
+                    }
                     checkSave();
                     animateMenuEntrance();
                     break;
@@ -3226,7 +3333,7 @@
         
         let cartas=[], pares=0, total=0, travado=false, hp=0, hpMax=0, combo=0, missCombo=0, tempo=0, timer=null, chaosTimer=null, tauntTimer=null, lastScreen='screen-menu', currentBossIndex=0;
         let lastMatch = 0, currentBookPage = 0, bleedInterval = null, chaosInternalTimer = null, speechHideTimer = null, typewriterTimer = null;
-        const fideliusRuntime = { restoreTimer: null };
+        const fideliusRuntime = { restoreTimer: null, isFideliusActive: false, snapshot: null, sequence: 0 };
 
         function normalizeGameRuntimeState() {
             if(!game || typeof game !== 'object') game = {};
@@ -3337,6 +3444,7 @@
             CosmeticsSystem.init();
             updateProfUI(); 
             applySettings(); 
+            MenuBackgroundFX.init();
             MenuConsoleController.init();
             NotificationSystem.init();
             GrimoireFX.init();
@@ -5183,83 +5291,73 @@
             if(overlay) overlay.style.pointerEvents = locked ? 'auto' : 'none';
         }
 
+        function getFideliusCardId(card) {
+            if(!card) return '';
+            if(!card.dataset.fideliusId) {
+                fideliusRuntime.sequence += 1;
+                card.dataset.fideliusId = `fidelius-${fideliusRuntime.sequence}`;
+            }
+            return card.dataset.fideliusId;
+        }
+
         function snapshotFideliusState(cards) {
-            cards.forEach(card => {
-                const snapshot = {
-                    classes: Array.from(card.classList),
-                    pointerEvents: card.style.pointerEvents || '',
-                    ariaDisabled: card.getAttribute('aria-disabled'),
-                    wasMatched: card.classList.contains('matched'),
-                    wasFlipped: card.classList.contains('flipped') || card.classList.contains('face-up')
-                };
-                card.dataset.fideliusSnapshot = JSON.stringify(snapshot);
+            const temporaryRevealIds = new Set(
+                (Array.isArray(cartas) ? cartas : [])
+                    .map(entry => (entry && entry.el) ? getFideliusCardId(entry.el) : '')
+                    .filter(Boolean)
+            );
+
+            fideliusRuntime.snapshot = cards.map(card => {
+                const id = getFideliusCardId(card);
+                const isMatched = card.classList.contains('matched');
+                const isFlipped = card.classList.contains('flipped') || card.classList.contains('face-up');
+                const isLocked = card.style.pointerEvents === 'none' || card.getAttribute('aria-disabled') === 'true';
+                const isTemporarilyRevealed = !isMatched && temporaryRevealIds.has(id);
+
+                return { id, isFlipped, isMatched, isLocked, isTemporarilyRevealed };
             });
         }
 
         function restoreFideliusState(cards) {
+            const snapshotList = Array.isArray(fideliusRuntime.snapshot) ? fideliusRuntime.snapshot : [];
+            const snapshotById = new Map(snapshotList.map(entry => [entry.id, entry]));
+
             cards.forEach(card => {
-                const raw = card.dataset.fideliusSnapshot;
-                const gainedMatched = card.classList.contains('matched');
-                const gainedFlipped = card.classList.contains('flipped') || card.classList.contains('face-up');
+                const id = getFideliusCardId(card);
+                const original = snapshotById.get(id);
                 card.classList.remove('fidelius-reveal');
 
-                if(!raw) {
-                    console.warn('[Fidelius] Snapshot ausente para carta:', card);
-                    return;
-                }
+                if(!original) return;
 
-                let snapshot = null;
-                try {
-                    snapshot = JSON.parse(raw);
-                } catch (err) {
-                    console.warn('[Fidelius] Snapshot inválido para carta:', card, err);
-                    delete card.dataset.fideliusSnapshot;
-                    return;
-                }
-
-                card.className = '';
-                if(Array.isArray(snapshot.classes)) {
-                    snapshot.classes.forEach(cls => {
-                        if(cls) card.classList.add(cls);
-                    });
-                }
-
-                // Edge case protection: if something matched/flipped mid-event, preserve that state.
-                if(gainedMatched && !snapshot.wasMatched) {
+                if(!original.isMatched) {
+                    const shouldStayFlipped = original.isFlipped && !original.isTemporarilyRevealed;
+                    card.classList.toggle('flipped', !!shouldStayFlipped);
+                    card.classList.remove('face-up');
+                } else {
                     card.classList.add('matched');
-                    card.classList.remove('flipped');
-                } else if(gainedFlipped && !snapshot.wasFlipped && !card.classList.contains('matched')) {
-                    card.classList.add('flipped');
                 }
 
-                if(typeof snapshot.pointerEvents === 'string' && snapshot.pointerEvents.length) {
-                    card.style.pointerEvents = snapshot.pointerEvents;
+                if(original.isLocked) {
+                    card.style.pointerEvents = 'none';
+                    card.setAttribute('aria-disabled', 'true');
                 } else {
                     card.style.removeProperty('pointer-events');
-                }
-
-                if(snapshot.ariaDisabled === null || typeof snapshot.ariaDisabled === 'undefined') {
                     card.removeAttribute('aria-disabled');
-                } else {
-                    card.setAttribute('aria-disabled', snapshot.ariaDisabled);
                 }
 
-                const shouldFaceUp =
-                    card.classList.contains('matched') ||
-                    card.classList.contains('flipped') ||
-                    card.classList.contains('face-up');
+                const shouldFaceUp = card.classList.contains('matched') || card.classList.contains('flipped');
                 if(window.gsap) {
                     gsap.set(card, { rotateY: shouldFaceUp ? 180 : 0 });
                 } else {
                     card.style.transform = `rotateY(${shouldFaceUp ? 180 : 0}deg)`;
                 }
-
-                delete card.dataset.fideliusSnapshot;
             });
+
+            fideliusRuntime.snapshot = null;
         }
 
         function triggerFidelius() {
-            if (game.chaosActive || game.fidelius.active) return;
+            if (game.chaosActive || game.fidelius.active || fideliusRuntime.isFideliusActive) return;
             game.fidelius.active = true;
             game.fidelius.count++;
             game.fidelius.lastTime = 90 - tempo;
@@ -5267,6 +5365,8 @@
         }
 
         function startFidelius() {
+            if(fideliusRuntime.isFideliusActive) return;
+            fideliusRuntime.isFideliusActive = true;
             notifySpell("FIDELIUS", "Segredos temporariamente revelados");
             playS('fidelius');
             audioManager.setGameMusicRate(0.6, 1.5);
@@ -5281,7 +5381,11 @@
 
             const cards = Array.from(document.querySelectorAll('.card'));
             snapshotFideliusState(cards);
-            cards.forEach(card => card.classList.add('fidelius-reveal'));
+            cards.forEach(card => {
+                if(!card.classList.contains('matched')) {
+                    card.classList.add('fidelius-reveal');
+                }
+            });
 
             fideliusRuntime.restoreTimer = setTimeout(() => {
                 endFidelius();
@@ -5289,6 +5393,12 @@
         }
 
         function endFidelius() {
+            if(!fideliusRuntime.isFideliusActive) {
+                fideliusRuntime.snapshot = null;
+                game.fidelius.active = false;
+                return;
+            }
+            fideliusRuntime.isFideliusActive = false;
             if(fideliusRuntime.restoreTimer) {
                 clearTimeout(fideliusRuntime.restoreTimer);
                 fideliusRuntime.restoreTimer = null;
@@ -6154,6 +6264,247 @@
                 this.initialized = true;
             }
         };
+
+        const MenuBackgroundFX = (() => {
+            const CAPA_SRC = 'Imagens/CapaGame.jpg';
+            const state = {
+                initialized: false,
+                imageRatio: 16 / 9,
+                resizeRaf: 0
+            };
+
+            function rand(min, max) {
+                return min + Math.random() * (max - min);
+            }
+
+            function createStarfieldTexture(w, h, opts = {}) {
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(32, Math.floor(w));
+                canvas.height = Math.max(32, Math.floor(h));
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return '';
+
+                const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                grad.addColorStop(0, opts.topColor || '#0a1730');
+                grad.addColorStop(0.58, opts.midColor || '#071226');
+                grad.addColorStop(1, opts.bottomColor || '#02060f');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const nebulaCount = Number.isFinite(opts.nebulaCount) ? opts.nebulaCount : 9;
+                for (let i = 0; i < nebulaCount; i++) {
+                    const x = rand(0, canvas.width);
+                    const y = rand(0, canvas.height);
+                    const radius = rand(canvas.width * 0.08, canvas.width * 0.22);
+                    const alpha = rand(0.03, 0.1);
+                    const glow = ctx.createRadialGradient(x, y, radius * 0.05, x, y, radius);
+                    glow.addColorStop(0, `rgba(70, 150, 220, ${alpha})`);
+                    glow.addColorStop(0.62, `rgba(40, 90, 150, ${alpha * 0.55})`);
+                    glow.addColorStop(1, 'rgba(8, 18, 32, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                const defaultStars = Math.min(420, Math.max(200, Math.round((canvas.width * canvas.height) / 7200)));
+                const starCount = Number.isFinite(opts.starCount) ? opts.starCount : defaultStars;
+                for (let i = 0; i < starCount; i++) {
+                    const x = rand(0, canvas.width);
+                    const y = rand(0, canvas.height);
+                    const r = Math.random() < 0.1 ? rand(1.2, 2.4) : rand(0.3, 1.15);
+                    const alpha = rand(0.35, 0.95);
+                    const hue = Math.random() < 0.15 ? rand(40, 60) : rand(198, 210);
+                    const sat = Math.random() < 0.15 ? rand(70, 92) : rand(35, 78);
+                    const light = Math.random() < 0.15 ? rand(72, 92) : rand(68, 88);
+                    ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (r > 1.4) {
+                        ctx.fillStyle = `hsla(202, 72%, 78%, ${alpha * 0.2})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, r * rand(2.2, 3.4), 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                const meteorCount = Number.isFinite(opts.meteorCount) ? opts.meteorCount : 8;
+                ctx.globalCompositeOperation = 'screen';
+                for (let i = 0; i < meteorCount; i++) {
+                    const x = rand(-canvas.width * 0.1, canvas.width * 0.95);
+                    const y = rand(0, canvas.height * 0.75);
+                    const len = rand(canvas.width * 0.03, canvas.width * 0.11);
+                    const angle = rand(-0.58, -0.25);
+                    const x2 = x + Math.cos(angle) * len;
+                    const y2 = y + Math.sin(angle) * len;
+                    const meteorGrad = ctx.createLinearGradient(x, y, x2, y2);
+                    meteorGrad.addColorStop(0, 'rgba(80, 170, 255, 0)');
+                    meteorGrad.addColorStop(0.55, 'rgba(110, 196, 255, 0.24)');
+                    meteorGrad.addColorStop(1, 'rgba(255, 255, 255, 0.85)');
+                    ctx.strokeStyle = meteorGrad;
+                    ctx.lineWidth = rand(0.7, 1.9);
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                ctx.globalCompositeOperation = 'source-over';
+
+                return canvas.toDataURL('image/png');
+            }
+
+            function ensureMeteors(layer) {
+                if (!layer || layer.childElementCount > 0) return;
+                for (let i = 0; i < 7; i++) {
+                    const meteor = document.createElement('span');
+                    meteor.className = 'menu-meteor';
+                    const duration = rand(16, 34);
+                    meteor.style.left = `${rand(-22, 92).toFixed(2)}%`;
+                    meteor.style.top = `${rand(-16, 56).toFixed(2)}%`;
+                    meteor.style.setProperty('--meteor-size', `${Math.round(rand(120, 260))}px`);
+                    meteor.style.setProperty('--meteor-duration', `${duration.toFixed(2)}s`);
+                    meteor.style.setProperty('--meteor-delay', `${(-rand(0, duration)).toFixed(2)}s`);
+                    meteor.style.setProperty('--meteor-angle', `${(-rand(14, 24)).toFixed(2)}deg`);
+                    meteor.style.setProperty('--meteor-travel-x', `${rand(22, 44).toFixed(2)}vw`);
+                    meteor.style.setProperty('--meteor-travel-y', `${rand(10, 24).toFixed(2)}vh`);
+                    layer.appendChild(meteor);
+                }
+            }
+
+            function getContainBounds(width, height, imageRatio) {
+                let bgWidth = width;
+                let bgHeight = width / imageRatio;
+                if (bgHeight > height) {
+                    bgHeight = height;
+                    bgWidth = height * imageRatio;
+                }
+                return {
+                    left: (width - bgWidth) / 2,
+                    top: (height - bgHeight) / 2,
+                    width: bgWidth,
+                    height: bgHeight
+                };
+            }
+
+            function setBandRect(el, left, top, width, height, opacity) {
+                if (!el) return;
+                const safeWidth = Math.max(0, width);
+                const safeHeight = Math.max(0, height);
+                el.style.left = `${Math.round(left)}px`;
+                el.style.top = `${Math.round(top)}px`;
+                el.style.width = `${Math.round(safeWidth)}px`;
+                el.style.height = `${Math.round(safeHeight)}px`;
+                el.style.opacity = safeWidth > 1 && safeHeight > 1 ? String(Math.max(0, Math.min(1, opacity))) : '0';
+            }
+
+            function updateFogBands(menu, bounds) {
+                const leftBand = document.getElementById('menu-capa-fog-left');
+                const rightBand = document.getElementById('menu-capa-fog-right');
+                const topBand = document.getElementById('menu-capa-fog-top');
+                const bottomBand = document.getElementById('menu-capa-fog-bottom');
+
+                const sideSpace = Math.max(0, bounds.left);
+                const topSpace = Math.max(0, bounds.top);
+                const sideFade = sideSpace > 1 ? Math.min(360, sideSpace + 180) : Math.max(92, menu.clientWidth * 0.08);
+                const verticalFade = topSpace > 1 ? Math.min(260, topSpace + 140) : Math.max(76, menu.clientHeight * 0.085);
+
+                setBandRect(
+                    leftBand,
+                    sideSpace > 1 ? bounds.left - sideFade * 0.74 : 0,
+                    bounds.top,
+                    sideSpace > 1 ? sideSpace + sideFade * 0.74 : sideFade,
+                    bounds.height,
+                    sideSpace > 1 ? 0.93 : 0.2
+                );
+                setBandRect(
+                    rightBand,
+                    sideSpace > 1 ? bounds.left + bounds.width - sideFade * 0.26 : menu.clientWidth - sideFade,
+                    bounds.top,
+                    sideSpace > 1 ? sideSpace + sideFade * 0.74 : sideFade,
+                    bounds.height,
+                    sideSpace > 1 ? 0.93 : 0.2
+                );
+                setBandRect(
+                    topBand,
+                    bounds.left,
+                    topSpace > 1 ? bounds.top - verticalFade * 0.72 : 0,
+                    bounds.width,
+                    topSpace > 1 ? topSpace + verticalFade * 0.72 : verticalFade,
+                    topSpace > 1 ? 0.88 : 0.16
+                );
+                setBandRect(
+                    bottomBand,
+                    bounds.left,
+                    topSpace > 1 ? bounds.top + bounds.height - verticalFade * 0.28 : menu.clientHeight - verticalFade,
+                    bounds.width,
+                    topSpace > 1 ? topSpace + verticalFade * 0.72 : verticalFade,
+                    topSpace > 1 ? 0.9 : 0.16
+                );
+            }
+
+            function refresh() {
+                const menu = document.getElementById('screen-menu');
+                if (!menu) return;
+                const width = menu.clientWidth;
+                const height = menu.clientHeight;
+                if (!width || !height) return;
+
+                const bounds = getContainBounds(width, height, state.imageRatio);
+                updateFogBands(menu, bounds);
+            }
+
+            function init() {
+                if (state.initialized) return;
+
+                const starLayer = document.getElementById('menu-starfield-layer');
+                const starLayerNear = document.getElementById('menu-starfield-layer-2');
+                const meteorLayer = document.getElementById('menu-meteor-layer');
+                if (!starLayer || !starLayerNear || !meteorLayer) return;
+
+                const texMain = createStarfieldTexture(1920, 1080, {
+                    starCount: 360,
+                    meteorCount: 10,
+                    nebulaCount: 10
+                });
+                const texNear = createStarfieldTexture(1600, 900, {
+                    topColor: '#0b1c38',
+                    midColor: '#08182d',
+                    bottomColor: '#051022',
+                    starCount: 220,
+                    meteorCount: 5,
+                    nebulaCount: 6
+                });
+
+                if (texMain) starLayer.style.backgroundImage = `url("${texMain}")`;
+                if (texNear) starLayerNear.style.backgroundImage = `url("${texNear}")`;
+                ensureMeteors(meteorLayer);
+
+                const ratioProbe = new Image();
+                ratioProbe.onload = () => {
+                    if (ratioProbe.naturalWidth > 0 && ratioProbe.naturalHeight > 0) {
+                        state.imageRatio = ratioProbe.naturalWidth / ratioProbe.naturalHeight;
+                        refresh();
+                    }
+                };
+                ratioProbe.src = CAPA_SRC;
+
+                window.addEventListener('resize', () => {
+                    if (state.resizeRaf) cancelAnimationFrame(state.resizeRaf);
+                    state.resizeRaf = requestAnimationFrame(refresh);
+                }, { passive: true });
+
+                state.initialized = true;
+                refresh();
+            }
+
+            return {
+                init,
+                refresh,
+                createStarfieldTexture
+            };
+        })();
 
         const MenuConsoleController = (() => {
             const THEME_KEY = 'aa_menu_theme';
