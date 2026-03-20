@@ -2683,14 +2683,17 @@
 
     <div id="achievement-popup"><div class="ach-inner"><div class="ach-icon" id="ach-pop-icon">🏆</div><div class="ach-text"><div class="ach-title" id="ach-pop-title">Conquista!</div><div class="ach-desc" id="ach-pop-desc">Desc.</div></div></div></div>
     <div class="owl-fx" id="fx-owl">🦉</div>
-    
+
+    <!-- Seção de áudio -->
     <audio id="ost-menu" src="Sons/musica_menu.mp3" loop></audio> 
     <audio id="ost-game" src="Sons/musica_jogo.mp3" loop></audio>
-    <audio id="amb-menu" src="Sons/ambience_menu.mp3" loop></audio>
+    <audio id="amb-menu" loop></audio>
 
+    <!-- Seção de UI -->
     <div id="screen-intro">
         <div class="intro-container">
             <div class="magic-overlay"></div>
+            <!-- Seção de vídeos -->
             <video id="intro-video" muted playsinline preload="auto" loop autoplay><source src="Videos/intro.mp4" type="video/mp4"></video>
             <div id="start-btn-intro" data-lang="intro_start">INICIAR JORNADA</div>
             <div id="skip-text" data-lang="intro_skip">PULAR INTRO</div>
@@ -2892,6 +2895,7 @@
     <div class="game-footer">Versão 1.1.2 | Arcane Academy &copy; KE STUDIO</div>
 
     <script>
+        // Início da lógica principal
         /**
          * Arcane Academy [DEMO] - Patch 2.2
          * Refatoração para Performance e Manutenibilidade
@@ -3054,6 +3058,7 @@
             'Balanca-Photoroom.png': '#f39c12' // Dourado Justiça
         };
 
+        // Seção de assets
         // --- ASSET MANAGER (PRELOAD SYSTEM) ---
         const AssetManager = {
             images: {}, // Cache de imagens carregadas
@@ -3194,6 +3199,7 @@
             {id:'infinite_15',icon:'♾️',title:'Eterno',desc:'Fase 15 Infinito.'}, {id:'completionist',icon:'📖',title:'Historiador',desc:'Grimório Completo.'}, {id:'collector',icon:'🃏',title:'Colecionador',desc:'Todas Skins.'}, {id:'fashion',icon:'🧙‍♀️',title:'Estiloso',desc:'Todos Avatares.'}
         ];
 
+        // Seção de áudio
         // --- 2. GERENCIAMENTO DE ÁUDIO ---
         const sfx = { 
             flip:new Audio('Sons/flip.mp3'), match:new Audio('Sons/match.mp3'), win:new Audio('Sons/win.mp3'), click:new Audio('Sons/click.mp3'), 
