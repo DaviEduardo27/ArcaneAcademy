@@ -2,7 +2,8 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
     <!-- Base inicial da versao mobile via WebView; mantem a mesma estrutura relativa de assets da Web para reduzir risco nesta etapa. -->
     <title>Arcane Academy [DEMO] - Patch 2.2</title>
     
@@ -14,8 +15,184 @@
     <meta name="theme-color" content="#c5a028">
 
     <link rel="icon" type="image/x-icon" href="icone.ico">
+    <link rel="stylesheet" href="vendor/fonts/fonts.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&family=Pirata+One&display=swap" rel="stylesheet">
+    <script src="vendor/gsap/gsap-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        // Fallback tecnico para WebView Android/offline quando o CDN do GSAP nao responder.
+        if (!window.gsap) {
+            (() => {
+                const RESERVED_KEYS = new Set([
+                    'duration', 'delay', 'ease', 'overwrite', 'repeat', 'yoyo',
+                    'stagger', 'onComplete', 'onUpdate', 'clearProps'
+                ]);
+                const TRANSFORM_KEYS = new Set(['x', 'y', 'scale', 'rotation', 'rotateY']);
+                const tickerCallbacks = new Set();
+                let tickerRunning = false;
+
+                function startTicker() {
+                    if (tickerRunning) return;
+                    tickerRunning = true;
+                    const tick = () => {
+                        tickerCallbacks.forEach((cb) => {
+                            try { cb(); } catch (e) {}
+                        });
+                        if (tickerCallbacks.size) requestAnimationFrame(tick);
+                        else tickerRunning = false;
+                    };
+                    requestAnimationFrame(tick);
+                }
+
+                function toArray(target) {
+                    if (!target) return [];
+                    if (typeof target === 'string') return Array.from(document.querySelectorAll(target));
+                    if (Array.isArray(target)) return target.flatMap((item) => toArray(item));
+                    if (target instanceof NodeList || target instanceof HTMLCollection) return Array.from(target);
+                    return [target];
+                }
+
+                function isElement(target) {
+                    return !!target && target.nodeType === 1;
+                }
+
+                function parseRelativeValue(currentValue, nextValue) {
+                    if (typeof nextValue !== 'string') return nextValue;
+                    const match = nextValue.match(/^([+-]=)\s*(-?\d+(\.\d+)?)$/);
+                    if (!match) return nextValue;
+                    const delta = Number(match[2]);
+                    return match[1] === '+=' ? currentValue + delta : currentValue - delta;
+                }
+
+                function applyClearProps(target, clearProps) {
+                    if (!isElement(target) || !clearProps) return;
+                    if (clearProps === 'all') {
+                        target.removeAttribute('style');
+                        delete target.__gsapFallbackTransform;
+                        return;
+                    }
+                    String(clearProps).split(',').map((item) => item.trim()).filter(Boolean).forEach((prop) => {
+                        if (prop === 'transform') {
+                            delete target.__gsapFallbackTransform;
+                            target.style.removeProperty('transform');
+                            return;
+                        }
+                        target.style.removeProperty(prop.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`));
+                    });
+                }
+
+                function formatStyleValue(prop, value) {
+                    if (typeof value !== 'number') return value;
+                    if (prop === 'opacity' || prop === 'zIndex' || prop === 'fontWeight' || prop === 'zoom') return String(value);
+                    return `${value}px`;
+                }
+
+                function applyTransform(target, key, value) {
+                    if (!isElement(target)) return;
+                    const state = target.__gsapFallbackTransform || { x: 0, y: 0, scale: 1, rotation: 0, rotateY: 0 };
+                    const currentValue = Number(state[key]) || 0;
+                    state[key] = parseRelativeValue(currentValue, value);
+                    target.__gsapFallbackTransform = state;
+                    target.style.transform =
+                        `translate(${state.x}px, ${state.y}px) scale(${state.scale}) rotate(${state.rotation}deg) rotateY(${state.rotateY}deg)`;
+                }
+
+                function applyProp(target, key, value) {
+                    if (key === 'clearProps') {
+                        applyClearProps(target, value);
+                        return;
+                    }
+                    if (TRANSFORM_KEYS.has(key)) {
+                        applyTransform(target, key, value);
+                        return;
+                    }
+
+                    if (isElement(target)) {
+                        if (key in target.style) {
+                            const currentRaw = target.style[key];
+                            const current = Number.parseFloat(currentRaw) || 0;
+                            const resolved = parseRelativeValue(current, value);
+                            target.style[key] = formatStyleValue(key, resolved);
+                            return;
+                        }
+                        if (key in target) {
+                            const current = Number(target[key]) || 0;
+                            target[key] = parseRelativeValue(current, value);
+                            return;
+                        }
+                        target.style.setProperty(key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), formatStyleValue(key, value));
+                        return;
+                    }
+
+                    if (target && typeof target === 'object') {
+                        const current = Number(target[key]) || 0;
+                        target[key] = parseRelativeValue(current, value);
+                    }
+                }
+
+                function applyVars(target, vars = {}) {
+                    Object.entries(vars).forEach(([key, value]) => {
+                        if (RESERVED_KEYS.has(key)) return;
+                        applyProp(target, key, value);
+                    });
+                    if (vars.clearProps) applyClearProps(target, vars.clearProps);
+                    if (typeof vars.onUpdate === 'function') {
+                        try { vars.onUpdate(); } catch (e) {}
+                    }
+                }
+
+                function runTween(target, vars = {}, fromVars = null) {
+                    const targets = toArray(target);
+                    const delay = Number(vars.delay) || 0;
+                    const duration = Number(vars.duration) || 0;
+                    const stagger = Number(vars.stagger) || 0;
+
+                    targets.forEach((item, index) => {
+                        if (!item) return;
+                        if (fromVars) applyVars(item, fromVars);
+                        const stepDelay = (delay + (stagger * index)) * 1000;
+                        window.setTimeout(() => applyVars(item, vars), stepDelay);
+                    });
+
+                    const completeDelay = (delay + duration + (stagger * Math.max(0, targets.length - 1))) * 1000;
+                    if (typeof vars.onComplete === 'function') {
+                        window.setTimeout(() => {
+                            try { vars.onComplete(); } catch (e) {}
+                        }, completeDelay);
+                    }
+
+                    return { kill() {} };
+                }
+
+                window.gsap = {
+                    to(target, vars) {
+                        return runTween(target, vars);
+                    },
+                    fromTo(target, fromVars, toVars) {
+                        return runTween(target, toVars, fromVars);
+                    },
+                    from(target, vars) {
+                        return runTween(target, vars);
+                    },
+                    set(target, vars) {
+                        toArray(target).forEach((item) => applyVars(item, vars));
+                        return { kill() {} };
+                    },
+                    killTweensOf() {},
+                    ticker: {
+                        add(callback) {
+                            if (typeof callback !== 'function') return;
+                            tickerCallbacks.add(callback);
+                            startTicker();
+                        },
+                        remove(callback) {
+                            tickerCallbacks.delete(callback);
+                        }
+                    }
+                };
+            })();
+        }
+    </script>
     
     <style>
         /* --- VISUAL CORE (AAA UPGRADE) --- */
@@ -1024,12 +1201,14 @@
         @keyframes furyBurn { 0% { box-shadow: 0 0 15px #ff4500; } 100% { box-shadow: 0 0 40px #ff4500, 0 0 20px #ffff00; filter: brightness(1.3); } }
 
         /* --- NOTIFICAÇÕES & POPUPS --- */
-        #magic-alert-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 30000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        #magic-alert-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 30000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); --runtime-modal-max-height: 90vh; }
         .magic-alert-box { background: linear-gradient(135deg, #121212, #000); border: 2px solid var(--accent-gold); padding: 50px 80px; text-align: center; border-radius: 12px; box-shadow: 0 0 80px rgba(197, 160, 40, 0.4); max-width: 500px; display:flex; flex-direction:column; align-items:center; gap:25px; transform: scale(0.8); opacity: 0; transition: all 0.3s ease; }
         .magic-alert-box.show { transform: scale(1); opacity: 1; }
         .magic-alert-box h3 { color: var(--accent-gold); font-family: 'Cinzel'; font-size: 2rem; margin:0; letter-spacing: 2px; }
         .magic-alert-box p { color: #ddd; font-family: 'MedievalSharp'; font-size: 1.3rem; margin:0; }
         .magic-alert-btn { background: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 15px 40px; font-family: 'Cinzel'; cursor: pointer; transition: 0.3s; font-size: 1.1rem; text-transform:uppercase; letter-spacing: 2px; } .magic-alert-btn:hover { background: var(--accent-gold); color: #000; box-shadow: 0 0 30px var(--accent-gold); }
+        /* Android/WebView modal guard: limita altura util e evita paineis fora da viewport apos resize. */
+        #magic-alert-modal .magic-alert-box { max-height: min(var(--modal-max-height, 90vh), var(--runtime-modal-max-height, 90vh)); overflow-y: auto; overscroll-behavior: contain; }
 
         .notification-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #000; padding: 15px 60px; border: 2px solid var(--accent-gold); font-family: 'Cinzel'; font-size: 1.3rem; color: var(--accent-gold); opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 20000; text-shadow: 0 0 15px var(--accent-gold); box-shadow: 0 10px 50px rgba(0,0,0,1); border-radius: 4px; display: none; }
         .notification-bar.show { opacity: 1; }
@@ -1204,8 +1383,16 @@
         .float-score { position: absolute; font-family: 'Cinzel'; font-weight: bold; color: var(--accent-gold); text-shadow: 0 0 5px #000; pointer-events: none; z-index: 500; }
 
         /* QUIZ */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; align-items: center; justify-content: center; perspective: 1500px; }
-        .newspaper { width: 600px; max-height: 90vh; background: #d6cfc7 url('https://www.transparenttextures.com/patterns/aged-paper.png'); color: #111; padding: 40px; border: 2px solid #000; outline: 5px double #222; box-shadow: 0 0 150px rgba(0,0,0,1); transform-style: preserve-3d; opacity: 0; transform: scale(0) rotate(720deg); display: flex; flex-direction: column; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; align-items: center; justify-content: center; perspective: 1500px; --runtime-modal-max-height: 90vh; }
+        .newspaper { width: 600px; max-height: 90vh; background: linear-gradient(180deg, #e0d6ca 0%, #cec2b1 100%); color: #111; padding: 40px; border: 2px solid #000; outline: 5px double #222; box-shadow: 0 0 150px rgba(0,0,0,1); transform-style: preserve-3d; opacity: 0; transform: scale(0) rotate(720deg); display: flex; flex-direction: column; }
+        /* Android/WebView modal guard: aplica limite runtime nos paineis centrais reaproveitados por varias telas. */
+        .modal-overlay .panel-glass,
+        .modal-overlay .newspaper,
+        .modal-overlay .glass-panel-premium,
+        .modal-overlay .shop-panel-premium { max-height: min(var(--modal-max-height, 90vh), var(--runtime-modal-max-height, 90vh)); }
+        .modal-overlay .panel-glass,
+        .modal-overlay .newspaper,
+        .modal-overlay .glass-panel-premium { overflow-y: auto; overscroll-behavior: contain; }
         .newspaper.streak-glow { box-shadow: 0 0 60px var(--accent-gold), 0 0 100px rgba(197, 160, 40, 0.6); border-color: var(--accent-gold); animation: streakPulse 2s infinite ease-in-out; }
         @keyframes streakPulse { 0% { box-shadow: 0 0 40px var(--accent-gold); filter: brightness(1); } 50% { box-shadow: 0 0 80px var(--accent-gold), 0 0 30px #fff; filter: brightness(1.2); } 100% { box-shadow: 0 0 40px var(--accent-gold); filter: brightness(1); } }
         .news-header { font-family: 'Pirata One'; text-align: center; border-bottom: 4px double #111; padding-bottom: 20px; margin-bottom: 20px; } .news-title { font-size: 4.5rem; margin: 0; text-transform: uppercase; line-height: 0.9; letter-spacing: 2px; }
@@ -1240,7 +1427,7 @@
         /* Grimorio */
         .grimoire-container { 
             width: 850px; max-width: 90vw; height: 720px; max-height: 85vh; 
-            background: #fdf5e6 url('https://www.transparenttextures.com/patterns/aged-paper.png'); 
+            background: linear-gradient(180deg, #fdf5e6 0%, #f2e5cf 100%); 
             border-radius: 4px 15px 15px 4px;
             border-left: 18px solid #3e2723; /* Lombada */
             box-shadow: 
@@ -5300,6 +5487,466 @@
             }
         }
 
+        /* mobile full pass: app shell, stage and shared landscape system */
+        html, body {
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+        }
+        @supports (height: 100dvh) {
+            html, body {
+                width: 100dvw;
+                height: 100dvh;
+                min-height: 100dvh;
+            }
+        }
+        body {
+            min-height: 100vh;
+        }
+        @supports (height: 100dvh) {
+            body {
+                min-height: 100dvh;
+            }
+        }
+        #app-shell {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            min-height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+        @supports (height: 100dvh) {
+            #app-shell {
+                width: 100dvw;
+                height: 100dvh;
+                min-height: 100dvh;
+            }
+        }
+        #app-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+            margin: 0 auto;
+            overflow: hidden;
+            isolation: isolate;
+        }
+        body.mobile-landscape {
+            --panel-scale: 0.9;
+            --panel-gap: 12px;
+            --header-height: 64px;
+            --subtitle-size: 0.78rem;
+            --label-size: 0.68rem;
+            --body-size: 0.86rem;
+            --small-size: 0.7rem;
+            --modal-max-width: min(980px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 20px));
+            --notification-width: min(360px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 24px));
+            --book-width: min(860px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 18px));
+            --book-height: min(74vh, calc(100vh - var(--mobile-safe-top) - var(--mobile-safe-bottom) - 18px));
+            --menu-columns: 3;
+            --shop-columns: 3;
+            --slot-columns: 3;
+            --app-stage-width: calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right));
+            --app-stage-height: calc(100vh - var(--mobile-safe-top) - var(--mobile-safe-bottom));
+            --fx-glow-multiplier: 0.92;
+            --fx-blur-multiplier: 0.92;
+            --fx-overlay-multiplier: 0.9;
+        }
+        body.mobile-landscape.mobile-landscape-compact {
+            --panel-scale: 0.78;
+            --panel-gap: 8px;
+            --header-height: 48px;
+            --subtitle-size: 0.64rem;
+            --label-size: 0.56rem;
+            --body-size: 0.72rem;
+            --small-size: 0.58rem;
+            --modal-max-width: min(760px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 16px));
+            --notification-width: min(300px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 18px));
+            --book-width: min(680px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 14px));
+            --book-height: min(66vh, calc(100vh - var(--mobile-safe-top) - var(--mobile-safe-bottom) - 12px));
+        }
+        body.mobile-landscape.mobile-landscape-short {
+            --panel-scale: 0.84;
+            --panel-gap: 9px;
+            --header-height: 52px;
+            --subtitle-size: 0.68rem;
+            --label-size: 0.6rem;
+            --body-size: 0.76rem;
+            --small-size: 0.62rem;
+            --modal-max-width: min(820px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 18px));
+            --notification-width: min(324px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 20px));
+            --book-width: min(740px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 16px));
+            --book-height: min(68vh, calc(100vh - var(--mobile-safe-top) - var(--mobile-safe-bottom) - 14px));
+        }
+        body.mobile-landscape.mobile-landscape-medium {
+            --panel-scale: 0.92;
+            --panel-gap: 11px;
+            --header-height: 58px;
+            --subtitle-size: 0.74rem;
+            --label-size: 0.64rem;
+            --body-size: 0.82rem;
+            --small-size: 0.66rem;
+            --modal-max-width: min(920px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 20px));
+            --notification-width: min(360px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 24px));
+            --book-width: min(820px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 18px));
+            --book-height: min(72vh, calc(100vh - var(--mobile-safe-top) - var(--mobile-safe-bottom) - 18px));
+        }
+        body.mobile-landscape.mobile-landscape-roomy {
+            --panel-scale: 1;
+            --panel-gap: 13px;
+            --header-height: 64px;
+            --subtitle-size: 0.8rem;
+            --label-size: 0.7rem;
+            --body-size: 0.88rem;
+            --small-size: 0.72rem;
+            --modal-max-width: min(1020px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 24px));
+            --notification-width: min(388px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 28px));
+            --book-width: min(900px, calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 22px));
+            --book-height: min(76vh, calc(100vh - var(--mobile-safe-top) - var(--mobile-safe-bottom) - 20px));
+        }
+        body.mobile-effects-light {
+            --fx-glow-multiplier: 0.7;
+            --fx-blur-multiplier: 0.72;
+            --fx-overlay-multiplier: 0.76;
+        }
+        body.mobile-effects-medium {
+            --fx-glow-multiplier: 0.88;
+            --fx-blur-multiplier: 0.9;
+            --fx-overlay-multiplier: 0.88;
+        }
+        body.mobile-effects-full {
+            --fx-glow-multiplier: 1;
+            --fx-blur-multiplier: 1;
+            --fx-overlay-multiplier: 1;
+        }
+        body.mobile-landscape #app-shell {
+            background:
+                radial-gradient(circle at 50% 0%, rgba(16, 34, 60, 0.22) 0%, transparent 40%),
+                linear-gradient(180deg, rgba(2, 6, 12, 0.96) 0%, rgba(0, 0, 0, 1) 100%);
+        }
+        body.mobile-landscape #app-stage {
+            width: min(100%, var(--app-stage-width));
+            height: min(100%, var(--app-stage-height));
+        }
+        body.mobile-landscape .screen,
+        body.mobile-landscape #screen-intro {
+            width: 100%;
+            height: 100%;
+        }
+        body.mobile-landscape .screen.active {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* mobile intro full pass */
+        body.mobile-landscape #screen-intro {
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at center, rgba(20, 38, 58, 0.86) 0%, rgba(0, 0, 0, 0.98) 100%) !important;
+        }
+        body.mobile-landscape #screen-intro .intro-container {
+            display: grid !important;
+            grid-template-rows: minmax(0, 1fr) auto;
+            justify-items: center;
+            align-items: center;
+            gap: var(--panel-gap);
+            width: 100%;
+            height: 100%;
+            padding: calc(var(--mobile-safe-top) + var(--panel-gap)) calc(var(--mobile-safe-right) + var(--ui-padding)) calc(var(--mobile-safe-bottom) + var(--panel-gap)) calc(var(--mobile-safe-left) + var(--ui-padding));
+        }
+        body.mobile-landscape #intro-video {
+            width: min(100%, var(--intro-video-width)) !important;
+            height: min(var(--intro-video-height), calc(100% - var(--header-height) - 72px)) !important;
+            max-width: min(100%, var(--intro-video-width)) !important;
+            object-fit: cover;
+        }
+        body.mobile-landscape #start-btn-intro {
+            width: min(var(--intro-button-width), calc(100% - 12px)) !important;
+        }
+        body.touch-mode.mobile-landscape #start-btn-intro:active {
+            transform: translateX(-50%) scale(0.985) !important;
+        }
+
+        /* mobile menu full pass */
+        body.mobile-landscape #menu-capa-layer {
+            background-size: cover !important;
+            background-position: center center !important;
+        }
+        body.mobile-landscape #screen-menu .menu-card {
+            display: grid !important;
+            grid-template-rows: minmax(0, 1fr);
+            justify-items: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding-top: calc(var(--mobile-safe-top) + var(--header-height) + 22px) !important;
+            gap: var(--panel-gap) !important;
+        }
+        body.mobile-landscape #screen-menu .menu-options-container {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            grid-auto-rows: minmax(var(--menu-card-height), 1fr);
+            align-content: center !important;
+            align-items: stretch !important;
+            justify-content: stretch !important;
+            width: min(100%, calc(var(--menu-card-width) * 3 + var(--menu-card-gap) * 2 + var(--panel-padding) * 2)) !important;
+            max-width: min(100%, 760px) !important;
+            min-height: calc(var(--menu-card-height) * 2 + var(--menu-card-gap) + 8px);
+            padding: var(--panel-gap) !important;
+            margin: 0 auto !important;
+        }
+        body.mobile-landscape #screen-menu .magic-menu-card {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 100% !important;
+            min-height: var(--menu-card-height) !important;
+            padding: calc(var(--panel-padding) - 4px) calc(var(--panel-padding) - 7px) !important;
+        }
+        body.mobile-landscape #screen-menu .menu-card > .coin-display,
+        body.mobile-landscape .beta-badge,
+        body.mobile-landscape .menu-theme-toggle,
+        body.mobile-landscape #menu-progress-badge {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(7, 11, 18, 0.58);
+            box-shadow:
+                0 10px 18px rgba(0, 0, 0, 0.28),
+                0 0 calc(14px * var(--glow-strength) * var(--fx-glow-multiplier)) rgba(0, 168, 204, 0.08);
+            backdrop-filter: blur(calc(var(--blur-strength) * var(--fx-blur-multiplier)));
+        }
+        body.mobile-landscape .beta-badge {
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            padding: 8px 12px;
+            border-radius: 999px;
+        }
+        body.mobile-landscape #menu-progress-badge {
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            top: calc(var(--mobile-safe-top) + var(--ui-padding) + 34px) !important;
+            max-width: min(60vw, 360px) !important;
+            text-align: center;
+        }
+
+        /* mobile gameplay full pass */
+        body.mobile-landscape #screen-game.mobile-landscape {
+            --boss-panel-width-runtime: var(--boss-panel-width);
+            --board-runtime-gap: var(--board-gap);
+            --board-card-width: var(--card-width);
+            --board-card-height: var(--card-height);
+            --board-runtime-max-width: 100%;
+            --board-runtime-max-height: 100%;
+        }
+        body.mobile-landscape #screen-game.mobile-landscape.active {
+            width: 100%;
+            height: 100%;
+        }
+        body.mobile-landscape #screen-game.mobile-landscape .game-area {
+            grid-template-columns: minmax(118px, var(--boss-panel-width-runtime)) minmax(0, 1fr) !important;
+            gap: var(--board-runtime-gap) !important;
+            align-items: center !important;
+        }
+        body.mobile-landscape #screen-game.mobile-landscape .boss-panel {
+            width: var(--boss-panel-width-runtime) !important;
+            max-width: var(--boss-panel-width-runtime) !important;
+        }
+        body.mobile-landscape #screen-game.mobile-landscape #board {
+            justify-self: center !important;
+            align-self: center !important;
+            width: min(100%, var(--board-runtime-max-width)) !important;
+            max-width: min(100%, var(--board-runtime-max-width)) !important;
+            max-height: var(--board-runtime-max-height) !important;
+        }
+        body.mobile-landscape #screen-game.mobile-landscape .card-grid.grid-4 .card-wrapper,
+        body.mobile-landscape #screen-game.mobile-landscape .card-grid.grid-5 .card-wrapper,
+        body.mobile-landscape #screen-game.mobile-landscape .card-grid.grid-6 .card-wrapper {
+            width: var(--board-card-width) !important;
+            height: var(--board-card-height) !important;
+        }
+        body.mobile-landscape #screen-game.mobile-landscape .card-wrapper,
+        body.mobile-landscape #screen-game.mobile-landscape .face {
+            transition:
+                transform var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease,
+                filter var(--transition-speed) ease !important;
+        }
+
+        /* mobile modal, profile, shop and slots full pass */
+        body.mobile-landscape .glass-panel-premium,
+        body.mobile-landscape .shop-panel-premium {
+            width: min(var(--modal-max-width), 100%) !important;
+            max-width: var(--modal-max-width) !important;
+        }
+        body.mobile-landscape #screen-settings .panel-glass,
+        body.mobile-landscape #screen-slots .panel-glass,
+        body.mobile-landscape #modal-infinite .panel-glass,
+        body.mobile-landscape #modal-ngplus .panel-glass {
+            width: min(var(--modal-max-width), 100%) !important;
+            max-width: min(var(--modal-max-width), 100%) !important;
+            display: grid !important;
+            gap: var(--panel-gap) !important;
+            align-content: start !important;
+        }
+        body.mobile-landscape #screen-settings .panel-glass {
+            max-width: min(720px, var(--modal-max-width)) !important;
+            text-align: left;
+        }
+        body.mobile-landscape #screen-settings .btn-main,
+        body.mobile-landscape #screen-slots .btn-main,
+        body.mobile-landscape #modal-infinite .btn-main,
+        body.mobile-landscape #modal-ngplus .btn-main {
+            width: min(320px, 100%) !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        body.mobile-landscape #screen-slots {
+            padding: calc(var(--mobile-safe-top) + var(--ui-padding)) calc(var(--mobile-safe-right) + var(--ui-padding)) calc(var(--mobile-safe-bottom) + var(--ui-padding)) calc(var(--mobile-safe-left) + var(--ui-padding)) !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+        body.mobile-landscape #screen-slots .slots-container {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--panel-gap) !important;
+            width: 100% !important;
+            margin-top: var(--panel-gap) !important;
+        }
+        body.mobile-landscape .slot-card {
+            min-height: 122px !important;
+            padding: calc(var(--panel-padding) - 6px) !important;
+            gap: var(--ui-gap) !important;
+            align-items: center !important;
+        }
+        body.mobile-landscape #screen-profile .glass-panel-premium {
+            max-height: var(--modal-max-height) !important;
+            overflow-y: auto !important;
+        }
+        body.mobile-landscape .shop-panel-premium {
+            min-height: min(78vh, 560px);
+        }
+        body.mobile-landscape .shop-scroll-area {
+            min-height: 0 !important;
+        }
+        body.mobile-landscape .shop-scroll-area .shop-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        /* mobile grimoire full pass */
+        body.mobile-landscape #screen-credits {
+            justify-content: center !important;
+            align-items: center !important;
+        }
+        body.mobile-landscape .grimoire-container {
+            width: min(var(--book-width), 100%) !important;
+            max-width: var(--book-width) !important;
+            height: min(var(--book-height), var(--modal-max-height)) !important;
+            max-height: min(var(--book-height), var(--modal-max-height)) !important;
+            display: grid !important;
+            grid-template-rows: auto minmax(0, 1fr) auto auto;
+            gap: var(--panel-gap) !important;
+            padding: calc(var(--panel-padding) + 2px) !important;
+        }
+        body.mobile-landscape .grimoire-header {
+            margin-bottom: 0 !important;
+            padding-bottom: calc(var(--ui-gap) + 2px) !important;
+        }
+        body.mobile-landscape .book-shell {
+            min-height: 0 !important;
+        }
+        body.mobile-landscape .grimoire-page {
+            padding: calc(var(--panel-padding) - 5px) calc(var(--panel-padding) - 3px) !important;
+            font-size: var(--body-size) !important;
+        }
+        body.mobile-landscape .boss-portrait {
+            width: clamp(112px, 18vw, 150px) !important;
+            height: clamp(112px, 18vw, 150px) !important;
+            margin-bottom: var(--ui-gap) !important;
+        }
+        body.mobile-landscape .boss-name-title {
+            font-size: calc(var(--title-size) + 0.24rem) !important;
+        }
+        body.mobile-landscape .boss-honorific {
+            font-size: var(--subtitle-size) !important;
+            margin-bottom: var(--panel-gap) !important;
+            padding-bottom: var(--ui-gap) !important;
+        }
+        body.mobile-landscape .boss-lore-text {
+            font-size: var(--body-size) !important;
+            padding: 0 10px !important;
+        }
+        body.mobile-landscape .ach-list {
+            padding: 0 8px !important;
+        }
+        body.mobile-landscape .ach-item {
+            gap: var(--ui-gap) !important;
+            padding: calc(var(--panel-padding) - 8px) !important;
+        }
+        body.mobile-landscape .ach-item-icon {
+            font-size: calc(var(--icon-size) + 0.82rem) !important;
+        }
+        body.mobile-landscape .ach-item-text h4 {
+            font-size: calc(var(--body-size) + 0.12rem) !important;
+        }
+        body.mobile-landscape .ach-item-text p,
+        body.mobile-landscape .page-number {
+            font-size: var(--small-size) !important;
+        }
+        body.mobile-landscape .grimoire-nav,
+        body.mobile-landscape .grimoire-actions {
+            margin-top: 0 !important;
+        }
+        body.mobile-landscape .grimoire-actions .btn-main {
+            width: auto !important;
+            min-width: clamp(180px, 30vw, 260px) !important;
+        }
+
+        /* mobile notifications and overlays full pass */
+        body.mobile-landscape .notification-bar {
+            width: min(var(--notification-width), calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 20px)) !important;
+            max-width: var(--notification-width) !important;
+            min-height: calc(var(--button-height) - 4px) !important;
+            border-radius: 999px !important;
+            padding: var(--notification-pad-y) var(--notification-pad-x) !important;
+            box-shadow:
+                0 16px 30px rgba(0, 0, 0, 0.34),
+                0 0 calc(18px * var(--glow-strength) * var(--fx-glow-multiplier)) rgba(0, 168, 204, 0.16);
+            backdrop-filter: blur(calc(var(--blur-strength) * var(--fx-blur-multiplier)));
+        }
+        body.mobile-landscape #toast-stack {
+            width: min(var(--notification-width), calc(100vw - var(--mobile-safe-left) - var(--mobile-safe-right) - 20px)) !important;
+        }
+        body.mobile-landscape .toast,
+        body.mobile-landscape #achievement-popup {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        body.mobile-landscape .newspaper {
+            width: min(var(--modal-max-width), 100%) !important;
+            max-width: min(720px, var(--modal-max-width)) !important;
+            display: grid !important;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            gap: var(--panel-gap) !important;
+        }
+        body.mobile-landscape .news-content {
+            min-height: 0;
+            overflow: auto;
+        }
+        body.mobile-landscape .headline {
+            font-size: calc(var(--title-size) + 0.3rem) !important;
+        }
+        body.mobile-landscape .sub-headline {
+            font-size: var(--subtitle-size) !important;
+        }
+        body.mobile-landscape #cinematic-overlay,
+        body.mobile-landscape #vignette-layer,
+        body.mobile-landscape #fog-layer {
+            opacity: calc(var(--overlay-opacity) * var(--fx-overlay-multiplier)) !important;
+        }
+
         /* Performance mobile: mesma identidade, menor custo. */
         body.reduce-effects #cinematic-overlay,
         body.reduce-effects #lighting-layer,
@@ -5420,17 +6067,17 @@
     <div class="owl-fx" id="fx-owl">🦉</div>
 
     <!-- Seção de áudio -->
-    <audio id="ost-menu" src="Sons/musica_menu.mp3" loop></audio> 
-    <audio id="ost-game" src="Sons/musica_jogo.mp3" loop></audio>
+    <audio id="ost-menu" src="Sons/musica_menu.mp3" loop preload="auto"></audio> 
+    <audio id="ost-game" src="Sons/musica_jogo.mp3" loop preload="auto"></audio>
     <!-- Audio ambiente dedicado ainda nao foi separado para a base mobile inicial. -->
-    <audio id="amb-menu" loop></audio>
+    <audio id="amb-menu" loop preload="none"></audio>
 
     <!-- Seção de UI -->
     <div id="screen-intro">
         <div class="intro-container">
             <div class="magic-overlay"></div>
             <!-- Seção de vídeos -->
-            <video id="intro-video" muted playsinline preload="auto" loop autoplay><source src="Videos/intro.mp4" type="video/mp4"></video>
+            <video id="intro-video" muted playsinline webkit-playsinline preload="auto" loop autoplay><source src="Videos/intro.mp4" type="video/mp4"></video>
             <div id="start-btn-intro" data-lang="intro_start">INICIAR JORNADA</div>
             <div id="skip-text" data-lang="intro_skip">PULAR INTRO</div>
         </div>
@@ -5713,7 +6360,11 @@
             const t = document.getElementById(id);
             if(t) {
                 t.style.display = 'flex';
-                setTimeout(() => t.classList.add('active'), 10);
+                applyAppShellState(id);
+                setTimeout(() => {
+                    t.classList.add('active');
+                    scheduleMobileRuntimeRefresh();
+                }, 10);
             }
         }
 
@@ -5748,9 +6399,33 @@
         let REDUCE_EFFECTS = false;
         let mobileRuntimeRaf = 0;
         let mobileRuntimeInitialized = false;
+        let modalRuntimeObserver = null;
         let introControlsBound = false;
         let introPlaybackStarted = false;
         let introDismissed = false;
+        let audioUnlockInitialized = false;
+        let audioUnlockInFlight = false;
+        let audioUnlocked = false;
+        let appWasBackgrounded = false;
+        let introVideoWasPlayingBeforeHide = false;
+        let mobileLayoutRaf = 0;
+
+        const MOBILE_BOARD_PADDING = {
+            compact: 6,
+            short: 7,
+            medium: 8,
+            roomy: 10
+        };
+        const MOBILE_BOARD_MAX_WIDTH = 820;
+        const MOBILE_BOARD_MAX_HEIGHT = 460;
+        const MOBILE_BOARD_MIN_BOSS_WIDTH = 118;
+        const MOBILE_BOARD_MAX_BOSS_WIDTH = 176;
+        const MOBILE_CARD_ASPECT_RATIO = 1.42;
+        const MOBILE_CARD_BASE_WIDTH = 56;
+        const MOBILE_CARD_SCALE_COMPACT = 0.78;
+        const MOBILE_CARD_SCALE_SHORT = 0.84;
+        const MOBILE_CARD_SCALE_MEDIUM = 0.9;
+        const MOBILE_CARD_SCALE_ROOMY = 0.96;
 
         function isReducedMotionMode() {
             return REDUCE_EFFECTS || reducedMotionMedia.matches;
@@ -5761,6 +6436,10 @@
                 ? cfg.part
                 : CONFIG_DEFAULTS.PARTICLES;
             return particlesEnabled && !REDUCE_EFFECTS;
+        }
+
+        function canAutoPlayManagedAudio() {
+            return (!isMobileMode || audioUnlocked) && !(document.hidden && isMobileMode);
         }
 
         function refreshMobileRuntimeState() {
@@ -5822,6 +6501,8 @@
             root.classList.toggle('mobile-effects-medium', MOBILE_EFFECTS_LEVEL === 'medium');
             root.classList.toggle('mobile-effects-full', MOBILE_EFFECTS_LEVEL === 'full');
             root.dataset.mobileEffectsLevel = MOBILE_EFFECTS_LEVEL;
+            root.style.setProperty('--viewport-width', `${vw}px`);
+            root.style.setProperty('--viewport-height', `${vh}px`);
 
             if (body) {
                 body.classList.toggle('touch-mode', isTouchDevice);
@@ -5842,7 +6523,23 @@
                 body.classList.toggle('reduce-effects', REDUCE_EFFECTS);
                 body.classList.toggle('no-particles', !shouldRenderParticles());
                 body.dataset.mobileEffectsLevel = MOBILE_EFFECTS_LEVEL;
+                body.style.setProperty('--viewport-width', `${vw}px`);
+                body.style.setProperty('--viewport-height', `${vh}px`);
                 body.style.setProperty('--particle-density', String(MOBILE_PARTICLE_DENSITY));
+            }
+
+            const stage = document.getElementById('app-stage');
+            if (stage) {
+                stage.classList.toggle('mobile-landscape', isLandscapeMobile);
+                stage.classList.toggle('mobile-landscape-short', isLandscapeMobileShort);
+                stage.classList.toggle('mobile-landscape-compact', isLandscapeMobileCompact);
+                stage.classList.toggle('mobile-landscape-medium', isLandscapeMobileMedium);
+                stage.classList.toggle('mobile-landscape-roomy', isLandscapeMobileRoomy);
+                stage.classList.toggle('mobile-effects-light', MOBILE_EFFECTS_LEVEL === 'light');
+                stage.classList.toggle('mobile-effects-medium', MOBILE_EFFECTS_LEVEL === 'medium');
+                stage.classList.toggle('mobile-effects-full', MOBILE_EFFECTS_LEVEL === 'full');
+                stage.style.setProperty('--viewport-width', `${vw}px`);
+                stage.style.setProperty('--viewport-height', `${vh}px`);
             }
 
             const gameScreen = document.getElementById('screen-game');
@@ -5853,14 +6550,182 @@
                 gameScreen.classList.toggle('mobile-landscape-medium', isLandscapeMobileMedium);
                 gameScreen.classList.toggle('mobile-landscape-roomy', isLandscapeMobileRoomy);
             }
+
+            scheduleLandscapeLayoutRefresh();
+        }
+
+        function refreshOpenModalLayout() {
+            const rootStyles = window.getComputedStyle(document.documentElement);
+            const safeTop = parseFloat(rootStyles.getPropertyValue('--mobile-safe-top')) || 0;
+            const safeBottom = parseFloat(rootStyles.getPropertyValue('--mobile-safe-bottom')) || 0;
+            const visualViewportRef = window.visualViewport;
+            const vh = Math.round((visualViewportRef && visualViewportRef.height) || window.innerHeight || document.documentElement.clientHeight || screen.height || 0);
+            const modalMaxHeight = Math.max(220, vh - safeTop - safeBottom - 16);
+
+            document.querySelectorAll('.modal-overlay, #magic-alert-modal').forEach((overlay) => {
+                if (!overlay) return;
+                const isVisible = window.getComputedStyle(overlay).display !== 'none';
+                if (!isVisible) {
+                    overlay.style.removeProperty('--runtime-modal-max-height');
+                    return;
+                }
+                overlay.style.setProperty('--runtime-modal-max-height', `${modalMaxHeight}px`);
+            });
+        }
+
+        function refreshMobileAppLayout() {
+            refreshMobileRuntimeState();
+            refreshOpenModalLayout();
         }
 
         function scheduleMobileRuntimeRefresh() {
             if (mobileRuntimeRaf) cancelAnimationFrame(mobileRuntimeRaf);
             mobileRuntimeRaf = requestAnimationFrame(() => {
                 mobileRuntimeRaf = 0;
-                refreshMobileRuntimeState();
+                refreshMobileAppLayout();
             });
+        }
+
+        function handleViewportRuntimeChange() {
+            scheduleMobileRuntimeRefresh();
+        }
+
+        function initModalRuntimeObserver() {
+            if (modalRuntimeObserver || typeof MutationObserver !== 'function') return;
+            const overlays = Array.from(document.querySelectorAll('.modal-overlay, #magic-alert-modal'));
+            if (!overlays.length) return;
+
+            modalRuntimeObserver = new MutationObserver(() => {
+                scheduleMobileRuntimeRefresh();
+            });
+
+            overlays.forEach((overlay) => {
+                modalRuntimeObserver.observe(overlay, { attributes: true, attributeFilter: ['style', 'class'] });
+            });
+        }
+
+        function getDesiredAudioState() {
+            if (currentState === UI_STATES.GAME) return 'game';
+            if (currentState === UI_STATES.INTRO) return null;
+            return 'menu';
+        }
+
+        function getAudioUnlockTargets() {
+            return [
+                document.getElementById('ost-menu'),
+                document.getElementById('ost-game'),
+                document.getElementById('amb-menu'),
+                sfx.click
+            ].filter(Boolean);
+        }
+
+        function primeManagedAudioElement(element) {
+            if (!element || typeof element.play !== 'function') return Promise.resolve(false);
+
+            const previousMuted = !!element.muted;
+            const previousVolume = typeof element.volume === 'number' ? element.volume : 1;
+            const previousTime = Number.isFinite(element.currentTime) ? element.currentTime : 0;
+
+            element.muted = true;
+            element.volume = 0;
+
+            let playPromise;
+            try {
+                playPromise = element.play();
+            } catch (error) {
+                playPromise = Promise.reject(error);
+            }
+
+            const finalize = () => {
+                try { element.pause(); } catch (e) {}
+                try { element.currentTime = previousTime; } catch (e) {}
+                element.muted = previousMuted;
+                element.volume = previousVolume;
+            };
+
+            if (!playPromise || typeof playPromise.then !== 'function') {
+                finalize();
+                return Promise.resolve(true);
+            }
+
+            return playPromise.then(() => {
+                finalize();
+                return true;
+            }).catch(() => {
+                finalize();
+                return false;
+            });
+        }
+
+        function unlockAudioOnFirstGesture() {
+            if (audioUnlocked || audioUnlockInFlight) return;
+
+            audioUnlockInFlight = true;
+            audioUnlocked = true;
+
+            Promise.allSettled(getAudioUnlockTargets().map((element) => primeManagedAudioElement(element))).finally(() => {
+                audioUnlockInFlight = false;
+                document.documentElement.classList.add('audio-unlocked');
+                if (document.body) document.body.classList.add('audio-unlocked');
+                audioManager.updateVolume();
+                audioManager.resumeForState(getDesiredAudioState());
+            });
+        }
+
+        function initAudioUnlock() {
+            if (audioUnlockInitialized) return;
+            audioUnlockInitialized = true;
+
+            ['pointerdown', 'touchstart', 'click'].forEach((eventName) => {
+                document.addEventListener(eventName, unlockAudioOnFirstGesture, { passive: true, capture: true });
+            });
+        }
+
+        function resumeIntroVideoAfterBackground() {
+            if (!introVideoWasPlayingBeforeHide || introDismissed) return;
+            const vid = document.getElementById('intro-video');
+            if (!vid) return;
+
+            introVideoWasPlayingBeforeHide = false;
+            const resumePromise = vid.play();
+            if (resumePromise && typeof resumePromise.catch === 'function') {
+                resumePromise.catch(() => {});
+            }
+        }
+
+        function handleAppVisibilityChange() {
+            if (!isMobileMode) {
+                if (!document.hidden) handleViewportRuntimeChange();
+                return;
+            }
+
+            const vid = document.getElementById('intro-video');
+            if (document.hidden) {
+                appWasBackgrounded = true;
+                introVideoWasPlayingBeforeHide = !!(vid && !vid.paused && !introDismissed);
+                if (vid && introVideoWasPlayingBeforeHide) vid.pause();
+                audioManager.pauseForBackground();
+                return;
+            }
+
+            handleViewportRuntimeChange();
+            resumeIntroVideoAfterBackground();
+            if (audioUnlocked) audioManager.resumeForState(getDesiredAudioState());
+            appWasBackgrounded = false;
+        }
+
+        function handleWindowFocus() {
+            handleViewportRuntimeChange();
+            if (!document.hidden && isMobileMode && appWasBackgrounded) {
+                resumeIntroVideoAfterBackground();
+                if (audioUnlocked) audioManager.resumeForState(getDesiredAudioState());
+                appWasBackgrounded = false;
+            }
+        }
+
+        function handleWindowBlur() {
+            if (!isMobileMode) return;
+            scheduleMobileRuntimeRefresh();
         }
 
         function initMobileRuntime() {
@@ -5868,18 +6733,150 @@
             mobileRuntimeInitialized = true;
 
             // O runtime mobile depende do estado base estar pronto antes do primeiro refresh.
-            refreshMobileRuntimeState();
+            refreshMobileAppLayout();
+            initAudioUnlock();
+            initModalRuntimeObserver();
             // visualViewport ajuda a seguir a altura util real da WebView em landscape.
-            window.addEventListener('resize', scheduleMobileRuntimeRefresh, { passive: true });
-            window.addEventListener('orientationchange', scheduleMobileRuntimeRefresh, { passive: true });
+            window.addEventListener('resize', handleViewportRuntimeChange, { passive: true });
+            window.addEventListener('orientationchange', handleViewportRuntimeChange, { passive: true });
+            window.addEventListener('focus', handleWindowFocus, { passive: true });
+            window.addEventListener('blur', handleWindowBlur, { passive: true });
+            window.addEventListener('pageshow', handleWindowFocus, { passive: true });
+            document.addEventListener('visibilitychange', handleAppVisibilityChange);
             if (window.visualViewport && typeof window.visualViewport.addEventListener === 'function') {
-                window.visualViewport.addEventListener('resize', scheduleMobileRuntimeRefresh, { passive: true });
+                window.visualViewport.addEventListener('resize', handleViewportRuntimeChange, { passive: true });
             }
             if (typeof reducedMotionMedia.addEventListener === 'function') {
-                reducedMotionMedia.addEventListener('change', scheduleMobileRuntimeRefresh);
+                reducedMotionMedia.addEventListener('change', handleViewportRuntimeChange);
             } else if (typeof reducedMotionMedia.addListener === 'function') {
-                reducedMotionMedia.addListener(scheduleMobileRuntimeRefresh);
+                reducedMotionMedia.addListener(handleViewportRuntimeChange);
             }
+        }
+
+        function ensureAppShell() {
+            if (document.getElementById('app-shell') && document.getElementById('app-stage')) return;
+            const body = document.body;
+            if (!body) return;
+
+            const shell = document.createElement('div');
+            shell.id = 'app-shell';
+            const stage = document.createElement('div');
+            stage.id = 'app-stage';
+            shell.appendChild(stage);
+
+            const nodesToMove = Array.from(body.childNodes).filter((node) => {
+                return !(node.nodeType === Node.ELEMENT_NODE && node.tagName === 'SCRIPT');
+            });
+
+            body.insertBefore(shell, body.firstChild);
+            nodesToMove.forEach((node) => stage.appendChild(node));
+        }
+
+        function applyAppShellState(activeScreenId = '') {
+            const shell = document.getElementById('app-shell');
+            const stage = document.getElementById('app-stage');
+            const screenId = activeScreenId || '';
+            if (shell) shell.dataset.activeScreen = screenId;
+            if (stage) stage.dataset.activeScreen = screenId;
+            if (document.body) document.body.dataset.activeScreen = screenId;
+            document.documentElement.dataset.activeScreen = screenId;
+        }
+
+        function getLandscapeViewportProfile() {
+            if (isLandscapeMobileCompact) return 'compact';
+            if (isLandscapeMobileShort) return 'short';
+            if (isLandscapeMobileMedium) return 'medium';
+            return 'roomy';
+        }
+
+        function getLandscapeCardScale() {
+            const profile = getLandscapeViewportProfile();
+            if (profile === 'compact') return MOBILE_CARD_SCALE_COMPACT;
+            if (profile === 'short') return MOBILE_CARD_SCALE_SHORT;
+            if (profile === 'medium') return MOBILE_CARD_SCALE_MEDIUM;
+            return MOBILE_CARD_SCALE_ROOMY;
+        }
+
+        function clearGameplayBoardSizing() {
+            const screen = document.getElementById('screen-game');
+            if (!screen) return;
+            [
+                '--boss-panel-width-runtime',
+                '--board-runtime-gap',
+                '--board-card-width',
+                '--board-card-height',
+                '--board-runtime-max-width',
+                '--board-runtime-max-height'
+            ].forEach((prop) => screen.style.removeProperty(prop));
+        }
+
+        function applyGameplayBoardSizing() {
+            const screen = document.getElementById('screen-game');
+            const board = document.getElementById('board');
+            if (!screen || !board) return;
+
+            if (!isLandscapeMobile || !board.children.length || window.getComputedStyle(screen).display === 'none') {
+                clearGameplayBoardSizing();
+                return;
+            }
+
+            const gameArea = screen.querySelector('.game-area');
+            const bossPanel = screen.querySelector('.boss-panel');
+            if (!gameArea || !bossPanel) return;
+
+            const gameAreaRect = gameArea.getBoundingClientRect();
+            if (!gameAreaRect.width || !gameAreaRect.height) return;
+
+            const gridClass = Array.from(board.classList).find((name) => /^grid-\d+$/.test(name)) || 'grid-4';
+            const cols = Number(gridClass.replace('grid-', '')) || 4;
+            const rows = Math.max(1, Math.ceil(board.children.length / cols));
+            const screenStyles = window.getComputedStyle(screen);
+            const profile = getLandscapeViewportProfile();
+            const gap = parseFloat(screenStyles.getPropertyValue('--board-gap')) || MOBILE_BOARD_PADDING[profile];
+            const columnGap = parseFloat(screenStyles.getPropertyValue('--board-column-gap')) || gap;
+            const targetCardWidth = MOBILE_CARD_BASE_WIDTH * getLandscapeCardScale();
+
+            let bossWidth = parseFloat(screenStyles.getPropertyValue('--boss-panel-width')) || bossPanel.getBoundingClientRect().width || 148;
+            bossWidth = Math.max(MOBILE_BOARD_MIN_BOSS_WIDTH, Math.min(MOBILE_BOARD_MAX_BOSS_WIDTH, bossWidth));
+
+            let availableBoardWidth = Math.max(0, Math.min(MOBILE_BOARD_MAX_WIDTH, gameAreaRect.width - bossWidth - columnGap));
+            const minBoardWidthNeeded = targetCardWidth * cols + gap * (cols - 1);
+            if (availableBoardWidth < minBoardWidthNeeded) {
+                bossWidth = Math.max(MOBILE_BOARD_MIN_BOSS_WIDTH, gameAreaRect.width - minBoardWidthNeeded - columnGap);
+                bossWidth = Math.min(MOBILE_BOARD_MAX_BOSS_WIDTH, bossWidth);
+                availableBoardWidth = Math.max(0, Math.min(MOBILE_BOARD_MAX_WIDTH, gameAreaRect.width - bossWidth - columnGap));
+            }
+
+            const availableBoardHeight = Math.max(0, Math.min(MOBILE_BOARD_MAX_HEIGHT, gameAreaRect.height - gap));
+            const widthBasedCardWidth = (availableBoardWidth - gap * (cols - 1)) / cols;
+            const heightBasedCardWidth = ((availableBoardHeight - gap * (rows - 1)) / rows) / MOBILE_CARD_ASPECT_RATIO;
+            let cardWidth = Math.min(widthBasedCardWidth, heightBasedCardWidth, targetCardWidth);
+            if (!Number.isFinite(cardWidth) || cardWidth <= 0) return;
+
+            const minimumCardWidth = isLandscapeMobileCompact ? 34 : 36;
+            cardWidth = Math.max(minimumCardWidth, cardWidth);
+            const cardHeight = cardWidth * MOBILE_CARD_ASPECT_RATIO;
+            const boardWidth = cardWidth * cols + gap * (cols - 1);
+            const boardHeight = cardHeight * rows + gap * (rows - 1);
+
+            screen.style.setProperty('--boss-panel-width-runtime', `${bossWidth.toFixed(2)}px`);
+            screen.style.setProperty('--board-runtime-gap', `${gap.toFixed(2)}px`);
+            screen.style.setProperty('--board-card-width', `${cardWidth.toFixed(2)}px`);
+            screen.style.setProperty('--board-card-height', `${cardHeight.toFixed(2)}px`);
+            screen.style.setProperty('--board-runtime-max-width', `${boardWidth.toFixed(2)}px`);
+            screen.style.setProperty('--board-runtime-max-height', `${boardHeight.toFixed(2)}px`);
+        }
+
+        function refreshMobileScreenLayout() {
+            applyGameplayBoardSizing();
+        }
+
+        function scheduleLandscapeLayoutRefresh() {
+            if (mobileLayoutRaf) cancelAnimationFrame(mobileLayoutRaf);
+            mobileLayoutRaf = requestAnimationFrame(() => {
+                mobileLayoutRaf = 0;
+                refreshMobileScreenLayout();
+            });
         }
 
         const UI = {
@@ -6105,14 +7102,20 @@
         };
 
         class AudioManager { 
-            constructor(){ this.tracks = {}; this.currentTrack = null; }
+            constructor(){ this.tracks = {}; this.currentTrack = null; this.pendingState = null; }
             init(){
                 this.tracks['menu'] = document.getElementById('ost-menu');
                 this.tracks['game'] = document.getElementById('ost-game');
                 this.tracks['amb'] = document.getElementById('amb-menu');
+                Object.values(this.tracks).forEach((track) => {
+                    if (!track) return;
+                    track.preload = track.id === 'amb-menu' ? 'none' : 'auto';
+                });
                 this.updateVolume();
             }
             updateMusicByGameState(state) {
+                this.pendingState = state;
+                if (!canAutoPlayManagedAudio()) return;
                 if(state === 'menu' || state === 'grimorio') {
                     this.crossfadeTo('menu');
                     if(this.tracks['amb']) { this.tracks['amb'].volume = cfg.s * 0.6; this.tracks['amb'].play().catch(()=>{}); }
@@ -6122,10 +7125,15 @@
                 }
             }
             crossfadeTo(id, duration=1.5) {
-                if(this.currentTrack === id) return;
                 const next = this.tracks[id]; const prev = this.tracks[this.currentTrack];
-                if(next) { next.currentTime = 0; next.volume = 0; next.playbackRate = 1.0; next.play().catch(()=>{}); gsap.to(next, {volume: cfg.m, duration: duration}); }
-                if(prev) { gsap.to(prev, {volume: 0, duration: duration, onComplete: ()=>prev.pause()}); }
+                if(!next || !canAutoPlayManagedAudio()) return;
+                if(this.currentTrack === id) {
+                    if(next.paused) next.play().catch(()=>{});
+                    gsap.to(next, {volume: cfg.m, duration: duration});
+                    return;
+                }
+                next.currentTime = 0; next.volume = 0; next.playbackRate = 1.0; next.play().catch(()=>{}); gsap.to(next, {volume: cfg.m, duration: duration});
+                if(prev && prev !== next) { gsap.to(prev, {volume: 0, duration: duration, onComplete: ()=>prev.pause()}); }
                 this.currentTrack = id;
             }
             setGameMusicRate(rate, duration=1.5) { const t = this.tracks['game']; if(t) gsap.to(t, {playbackRate: rate, duration: duration, ease: "power1.inOut"}); }
@@ -6143,6 +7151,12 @@
             playMenu(){ this.updateMusicByGameState('menu'); } 
             playGame(){ this.updateMusicByGameState('game'); } 
             stopAll(){ Object.values(this.tracks).forEach(t => { if(t) t.pause(); }); } 
+            pauseForBackground(){ Object.values(this.tracks).forEach((t) => { if(t) t.pause(); }); }
+            resumeForState(state){
+                const desiredState = state || this.pendingState || (this.currentTrack === 'game' ? 'game' : 'menu');
+                if (!desiredState || !canAutoPlayManagedAudio()) return;
+                this.updateMusicByGameState(desiredState);
+            }
             updateVolume(){
                 if(this.tracks['menu']) this.tracks['menu'].volume = cfg.m;
                 if(this.tracks['game']) this.tracks['game'].volume = cfg.m;
@@ -6151,6 +7165,27 @@
             } 
         } 
         const audioManager = new AudioManager();
+
+        function initMediaRuntimeSafety() {
+            document.querySelectorAll('audio').forEach((element) => {
+                element.preload = element.id === 'amb-menu' ? 'none' : 'auto';
+            });
+            Object.values(sfx).forEach((audio) => {
+                if (!audio) return;
+                audio.preload = 'auto';
+            });
+
+            const introVideo = document.getElementById('intro-video');
+            if (!introVideo) return;
+
+            introVideo.setAttribute('playsinline', '');
+            introVideo.setAttribute('webkit-playsinline', '');
+            introVideo.playsInline = true;
+            introVideo.addEventListener('error', () => {
+                document.documentElement.classList.add('intro-video-fallback');
+                if (document.body) document.body.classList.add('intro-video-fallback');
+            });
+        }
 
         // --- 3. ESTADO GLOBAL ---
         let currentSlotPrefix = "";
@@ -6383,9 +7418,12 @@
 
         // --- 4. INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
+            ensureAppShell();
+            applyAppShellState('screen-intro');
             initMobileRuntime();
 
             UI.init();
+            initMediaRuntimeSafety();
             audioManager.init();
             CameraSystem.init(); // Init Camera
             initWeatherSystem(); 
@@ -6416,6 +7454,7 @@
 
             initIntroControls();
             const menuScreen = document.getElementById('screen-menu');
+            scheduleMobileRuntimeRefresh();
 
             document.addEventListener("mousemove", (e) => {
                 // Menu Particles
@@ -6527,11 +7566,23 @@
             const skipButton = document.getElementById('skip-text');
             if (!vid || !startButton || !skipButton) return;
 
+            const canPlayIntroVideo = !vid.error && (!vid.canPlayType || !!vid.canPlayType('video/mp4'));
+            if (!canPlayIntroVideo) {
+                introPlaybackStarted = true;
+                endIntro();
+                return;
+            }
+
             introPlaybackStarted = true;
             vid.muted = false;
             vid.loop = false;
             vid.currentTime = 0;
-            vid.play().catch(() => {});
+            const playPromise = vid.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => {
+                    if (vid.error) endIntro();
+                });
+            }
             startButton.style.display = 'none';
             skipButton.style.display = 'block';
             vid.onended = endIntro;
@@ -6609,6 +7660,7 @@
             InventorySystem.render(); // Render inventory slots
             AbilityHUD.render();
             clearInterval(timer); startTimer(game.ngPlus ? 90 : 60); // NG+ agora tem 90s
+            setTimeout(scheduleLandscapeLayoutRefresh, 24);
             scheduleNextChaos(); scheduleTaunt(); if(!game.infiniteMode) DB.setItem('aa_save', JSON.stringify(game));
         }
 
@@ -7054,6 +8106,7 @@
 
         function playS(k, rate=1){
             if(sfx[k]){
+                if (!canAutoPlayManagedAudio() && isMobileMode) return;
                 const s = sfx[k].cloneNode();
                 if(k === 'paper' || k === 'bookOpen') s.playbackRate = 0.9 + Math.random() * 0.2; // Variação de pitch para realismo
                 else s.playbackRate = rate;

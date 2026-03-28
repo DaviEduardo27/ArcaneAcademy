@@ -1,0 +1,14 @@
+{
+  "appId": "com.kestudio.arcaneacademy",
+  "appName": "Arcane Academy",
+  "webDir": "../../webview-build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

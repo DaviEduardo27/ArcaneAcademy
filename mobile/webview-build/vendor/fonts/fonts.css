@@ -1,0 +1,49 @@
+/* Ponte local-first para WebView Android.
+   Mantem as familias externas opcionais e deixa a base pronta para receber WOFF2 locais depois. */
+
+@font-face {
+    font-family: 'Cinzel';
+    src: local('Cinzel'), local('Cinzel Regular');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Cinzel';
+    src: local('Cinzel Bold'), local('Cinzel-Bold');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MedievalSharp';
+    src: local('MedievalSharp'), local('MedievalSharp-Regular');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pirata One';
+    src: local('Pirata One'), local('PirataOne-Regular');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'UnifrakturMaguntia';
+    src: local('UnifrakturMaguntia');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+:root {
+    --font-title-stack: 'Cinzel', Georgia, 'Times New Roman', serif;
+    --font-body-stack: 'MedievalSharp', 'Trebuchet MS', system-ui, sans-serif;
+    --font-display-stack: 'Pirata One', Georgia, serif;
+    --font-grimoire-stack: 'UnifrakturMaguntia', 'Times New Roman', Georgia, serif;
+}
